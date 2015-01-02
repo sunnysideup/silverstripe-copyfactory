@@ -1,6 +1,10 @@
 Copy Factory
 ================================================================================
 
+
+[![Build Status](https://travis-ci.org/sunnysideup/silverstripe-copyfactory.svg?branch=master)](https://travis-ci.org/sunnysideup/silverstripe-copyfactory)
+
+
 This module helps you copy the contents of DataObjects, including their relations.
 
 
