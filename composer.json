@@ -1,0 +1,23 @@
+{
+	"name": "sunnysideup/copyfactory",
+	"type": "silverstripe-module",
+	"description": "Copy database records including their dependent records, including has-one, has-many and many-many records.",
+	"homepage": "https://github.com/sunnysideup/silverstripe-googleanalyticsbasics",
+	"keywords": ["copy", "paste", "database", "dataobject", "copying records", "duplicate records", "duplicate", "copy relations"],
+	"license": "Sunny Side Up (BSD-3-Clause and CUSTOM)",
+	"authors":[
+		{
+			"name": "Nicolaas Francken",
+			"homepage": "https://github.com/sunnysideup",
+			"email" : "modules@sunnysideup.co.nz",
+			"role" : "lead developer"
+		}
+	],
+	"require":{
+		"silverstripe/framework": "~3.1",
+		"silverstripe/cms": "~3.1"
+	},
+	"extra": {
+		"installer-name": "copyfactory"
+	}
+}
