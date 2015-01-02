@@ -472,6 +472,82 @@ class CopyFactory extends Object {
 	}
 
 	/**
+	 * find the copied ("NEW") equivalent of the old has-one relation
+	 * and attach it ...
+	 * @param DataObject $copyFrom
+	 * @param DataObject $newObject
+	 * @param String $hasOneMethod - the fieldname (method) of the has one relations (e.g. MyOtherDataObject)
+	 * @param DataList $dataListToChooseFrom
+	 *
+	 * @return CopyFactory
+	 */
+	public function attachToMoreRelevantHasOne($copyFrom, $newObject, $hasOneMethod, $dataListToChooseFrom) {
+		$fieldNameWithID = $hasOneMethod."ID";
+		if($this->recordSession) {
+			self::add_to_session("
+					ATTACH TO MORE RELEVANT HAS-ONE
+					FIELD $hasOneMethod
+					CONSTRAINT: ".$dataListToChooseFrom->sql()."
+					====================================
+				",
+				$copyFrom,
+				$newObject
+			);
+		}
+		if($copyFrom->$fieldNameWithID) {
+			$dataListToChooseFrom = $dataListToChooseFrom
+				->filter(array($copyFrom->CopiedFromFieldName($withID = true) => $copyFrom->$fieldNameWithID))
+				->Sort("Created DESC");
+			$count = $dataListToChooseFrom->count();
+			if($count == 1 && $newAttachment = $dataListToChooseFrom->First()) {
+				if($this->recordSession) {self::add_to_session("Found Matching record.", $copyFrom, $newObject);}
+				if($this->isForReal) {
+					$newObject->$fieldNameWithID = $newAttachment->ID;
+					$newObject->write();
+				}
+			}
+			else {
+				if($this->recordSession) {
+					if($count > 1) {
+						self::add_to_session("ERROR: found too many Matching records.", $copyFrom, $newObject);
+					}
+					elseif($count = 0) {
+						self::add_to_session("ERROR: Could not find any Matching records.", $copyFrom, $newObject);
+					}
+					else {
+						self::add_to_session("ERROR: There was an error retrieving the matching record.", $copyFrom, $newObject);
+					}
+				}
+				if($this->isForReal) {
+					$newObject->$fieldNameWithID = 0;
+					$newObject->write();
+				}
+			}
+		}
+		else {
+			self::add_to_session("copyFrom object does not have a value for: $fieldNameWithID", $copyFrom, $newObject);
+		}
+		if($this->recordSession) {self::add_to_session("*** END OF attachToMoreRelevantHasOne ***", $copyFrom, $newObject);}
+		return $this;
+	}
+
+	/**
+	 * This is used when an object has many children
+	 * and but we do NOT copy the children ...
+	 *
+	 * @param DataObject $copyFromParent
+	 * @param DataObject $newObjectParent
+	 * @param String $relationalFieldForChildren - this is the field on the parent that provides the children (e.g. Children or Images) WITHOUT the ID part.
+	 * @param String $relationFieldForParent - this is the field on the children that links them back to the parent.
+	 * @param Boolean $copyChildrenAsWell - this is the field on the child that is used as a link back to the object it is being copied from.
+	 *
+	 *  @return CopyFactory
+	 */
+	function copyOriginalHasManyItems($copyFromParent, $newObjectParent, $relationalFieldForChildren, $relationFieldForParentWithoutID) {
+		return $this->copyHasManyRelation($copyFromParent, $newObjectParent, $relationalFieldForChildren, $relationFieldForParentWithoutID, $copyChildrenAsWell = false);
+	}
+
+	/**
 	 * This is used when an object has many children
 	 * and we want to also copy the children and add it to the
 	 * copied into parent ...
@@ -482,7 +558,7 @@ class CopyFactory extends Object {
 	 * @param String $relationFieldForParent - this is the field on the children that links them back to the parent.
 	 * @param Boolean $copyChildrenAsWell - this is the field on the child that is used as a link back to the object it is being copied from.
 	 *
-	 *  @return CopyFactory
+	 * @return CopyFactory
 	 */
 	function copyHasManyRelation($copyFromParent, $newObjectParent, $relationalFieldForChildren, $relationFieldForParentWithoutID, $copyChildrenAsWell = true) {
 		if($this->recordSession) {
@@ -555,62 +631,20 @@ class CopyFactory extends Object {
 	}
 
 	/**
-	 * find the copied ("NEW") equivalent of the old has-one relation
-	 * and attach it ...
-	 * @param DataObject $copyFrom
-	 * @param DataObject $newObject
-	 * @param String $hasOneMethod - the fieldname (method) of the has one relations (e.g. MyOtherDataObject)
-	 * @param DataList $dataListToChooseFrom
+	 * This is used when an object has many children
+	 * and we want to also copy the children and add it to the
+	 * copied into parent ...
+	 *
+	 * @param DataObject $copyFromParent
+	 * @param DataObject $newObjectParent
+	 * @param String $relationalFieldForChildren - this is the field on the parent that provides the children (e.g. Children or Images) WITHOUT the ID part.
+	 * @param String $relationFieldForParent - this is the field on the children that links them back to the parent.
+	 * @param DataList $dataListToChooseFrom - selection of children that are best matches ...
 	 *
 	 * @return CopyFactory
 	 */
-	public function attachToMoreRelevantHasOne($copyFrom, $newObject, $hasOneMethod, $dataListToChooseFrom) {
-		$fieldNameWithID = $hasOneMethod."ID";
-		if($this->recordSession) {
-			self::add_to_session("
-					ATTACH TO MORE RELEVANT HAS-ONE
-					FIELD $hasOneMethod
-					CONSTRAINT: ".$dataListToChooseFrom->sql()."
-					====================================
-				",
-				$copyFrom,
-				$newObject
-			);
-		}
-		if($copyFrom->$fieldNameWithID) {
-			$dataListToChooseFrom = $dataListToChooseFrom
-				->filter(array($copyFrom->CopiedFromFieldName($withID = true) => $copyFrom->$fieldNameWithID))
-				->Sort("Created DESC");
-			$count = $dataListToChooseFrom->count();
-			if($count == 1 && $newAttachment = $dataListToChooseFrom->First()) {
-				if($this->recordSession) {self::add_to_session("Found Matching record.", $copyFrom, $newObject);}
-				if($this->isForReal) {
-					$newObject->$fieldNameWithID = $newAttachment->ID;
-					$newObject->write();
-				}
-			}
-			else {
-				if($this->recordSession) {
-					if($count > 1) {
-						self::add_to_session("ERROR: found too many Matching records.", $copyFrom, $newObject);
-					}
-					elseif($count = 0) {
-						self::add_to_session("ERROR: Could not find any Matching records.", $copyFrom, $newObject);
-					}
-					else {
-						self::add_to_session("ERROR: There was an error retrieving the matching record.", $copyFrom, $newObject);
-					}
-				}
-				if($this->isForReal) {
-					$newObject->$fieldNameWithID = 0;
-					$newObject->write();
-				}
-			}
-		}
-		else {
-			self::add_to_session("copyFrom object does not have a value for: $fieldNameWithID", $copyFrom, $newObject);
-		}
-		if($this->recordSession) {self::add_to_session("*** END OF attachToMoreRelevantHasOne ***", $copyFrom, $newObject);}
+	function attachToMoreRelevantHasMany($copyFromParent, $newObjectParent, $relationalFieldForChildren, $relationFieldForParentWithoutID, $dataListToChooseFrom){
+		die("to be completed");
 		return $this;
 	}
 

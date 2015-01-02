@@ -82,8 +82,11 @@ you can usually find some examples of config options (if any).
 
 For the most basic situation (without any special relationships between DataObjects),
 you can leave out the `doCopyFactory` method.  For more complex situations, the following
-methods can be added to a DataObject: `copyOriginalManyManyItems`, `attachToMoreRelevantHasOne`,
-and `copyHasManyRelation`.
+methods can be added to a DataObject:
+ - `copyHasOneRelation`, `attachToMoreRelevantHasOne`
+ - `copyOriginalHasManyItems, `copyHasManyRelation`, `attachToMoreRelevantHasMany`
+ - `copyOriginalManyManyItems`, `attachToMoreRelevantManyMany`
+
 
 These methods are chainable, here is an example:
 
