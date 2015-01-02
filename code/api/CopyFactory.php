@@ -401,6 +401,89 @@ class CopyFactory extends Object {
 	 *
 	 *  @return CopyFactory
 	 */
+	function copyHasOneRelation($copyFromParent, $newObjectParent, $relationalFieldForChild, $relationFieldForParentWithoutID, $copyChildrenAsWell = true) {
+		if($this->recordSession) {
+			self::add_to_session("
+					====================================
+					COPY HAS-ONE RELATION: $relationalFieldForChild
+					Children will ".($copyChildrenAsWell ? "also" : "not ")." be copied.
+					====================================
+				",
+				$copyFromParent,
+				$newObjectParent
+			);
+		}
+		foreach($copyFromChildObject = $copyFromParent->$relationalFieldForChild()) {
+			$className = $copyFromChildObject->ClassName;
+			$relationFieldForParentWithID = $relationFieldForParentWithoutID."ID";
+			$childCopyField = $copyFromChildObject->CopyFromFieldName($withID = true);
+			// what are we going to do?
+			if($this->recordSession) {
+				self::add_to_session("Creating a new object '$className'", $copyFromParent, $newObjectParent);
+				self::add_to_session("Adding parent field ($relationFieldForParentWithID) ID: ".$newObjectParent->ID, $copyFromParent, $newObjectParent);
+			}
+
+			//create object and set parent ...
+			$newObjectChildObject = new $className();
+			if($this->isForReal) {
+				$newObjectChildObject->$relationFieldForParentWithID = $newObjectParent->ID;
+			}
+
+			//does the child also copy ...
+			if($childCopyField) {
+				//we copy the data here so that we dont run into validation errors
+				$obj = CopyFactory::create($newObjectChildObject);
+				$obj->copyObject($copyFromChildObject, $newObjectChildObject);
+				//we reset the copy field here so that the copy can run another
+				//time and do the has-many and many-many parts
+				$newObjectChildObject->$childCopyField = intval($copyFromChildObject->ID);
+				//retrieve it again to set more details ...
+				$newObjectChildObject = $className::get()->byID($newObjectChildObject->ID);
+			}
+
+			// setting parent again - just in case ...
+			if($this->isForReal) {
+				$newObjectChildObject->$relationFieldForParentWithID = $newObjectParent->ID;
+				$newObjectChildObject->write();
+			}
+			if($this->recordSession) {
+				if(!$newObjectChildObject){
+					self::add_to_session("ERROR CHECK 1 - DID NOT CREATE OBJECT LISTED ABOVE", $copyFromChildObject, $newObjectChildObject);
+				}
+				else {
+					self::add_to_session("Created object", $copyFromChildObject, $newObjectChildObject);
+				}
+				if($newObjectChildObject->$relationFieldForParentWithID != $newObjectParent->ID) {
+					self::add_to_session("
+						ERROR CHECK 2:
+						Parent (".$newObjectParent->ClassName.") ID is: '".$newObjectParent->ID."'
+						Child ('".$newObjectChildObject->ClassName.".".$relationFieldForParentWithID."') is '".$newObjectChildObject->$relationFieldForParentWithID."',
+						but should be ".$newObjectParent->ID.".
+						The ID of the child is ".$newObjectChildObject->ID);
+					//hack fix
+				}
+				else {
+					self::add_to_session("Saved with correct new parent field ($relationFieldForParentWithID) ID: ".$newObjectChildObject->$relationFieldForParentWithID, $copyFromChildObject, $newObjectChildObject);
+				}
+			}
+		}
+		if($this->recordSession) {self::add_to_session("*** END OF copyHasOneRelation ***", $copyFromParent, $newObjectParent);}
+		return $this;
+	}
+
+	/**
+	 * This is used when an object has many children
+	 * and we want to also copy the children and add it to the
+	 * copied into parent ...
+	 *
+	 * @param DataObject $copyFromParent
+	 * @param DataObject $newObjectParent
+	 * @param String $relationalFieldForChildren - this is the field on the parent that provides the children (e.g. Children or Images) WITHOUT the ID part.
+	 * @param String $relationFieldForParent - this is the field on the children that links them back to the parent.
+	 * @param Boolean $copyChildrenAsWell - this is the field on the child that is used as a link back to the object it is being copied from.
+	 *
+	 *  @return CopyFactory
+	 */
 	function copyHasManyRelation($copyFromParent, $newObjectParent, $relationalFieldForChildren, $relationFieldForParentWithoutID, $copyChildrenAsWell = true) {
 		if($this->recordSession) {
 			self::add_to_session("
@@ -536,17 +619,102 @@ class CopyFactory extends Object {
 	 * @param DataObject $copyFrom
 	 * @param DataObject $newObject
 	 * @param String $manyManyMethod
+	 * @param Array $extraFields - e..g Field1, Field2
 	 *
 	 * @return CopyFactory
 	 */
-	public function copyOriginalManyManyItems($copyFrom, $newObject, $manyManyMethod) {
+	public function copyOriginalManyManyItems($copyFrom, $newObject, $manyManyMethod, $extraFields = array()) {
 		if($this->recordSession) {self::add_to_session("*** Start (AND end) copyOriginalManyManyItems for '$manyManyMethod' *** ", $copyFrom, $newObject);}
 		if($this->isForReal) {
-			$newObject->$manyManyMethod()->addMany($copyFrom->$manyManyMethod()->Column("ID"));
+			if(count($extraFields) == 0) {
+				$newObject->$manyManyMethod()->addMany($copyFrom->$manyManyMethod()->Column("ID"));
+			}
+			else {
+				foreach($copyFrom->$manyManyMethod() as $itemToAdd) {
+					unset($newExtraFieldsArray);
+					$newExtraFieldsArray = array();
+					foreach($extraFields as $extraField) {
+						$newExtraFieldsArray[$extraField] = $itemToAdd->$extraField;
+					}
+					$newObject->$manyManyMethod()->add($itemToAdd, $newExtraFieldsArray)
+				}
+			}
 		}
 		return $this;
 	}
 
+	/***
+	 *
+	 * make sure the many-many relation is also copy-able
+	 * @param DataObject $copyFrom
+	 * @param DataObject $newObject
+	 * @param String $manyManyMethod
+	 * @param DataList $dataListToChooseFrom
+	 * @param Array $extraFields - many_many_ExtraFields
+	 *
+	 * @return CopyFactory
+	 */
+	public function attachToMoreRelevantManyMany($copyFrom, $newObject, $manyManyMethod, $dataListToChooseFrom, $extraFields = array()) {
+		if($this->recordSession) {
+			self::add_to_session("
+					ATTACH TO MORE RELEVANT MANY-MANY
+					FIELD $manyManyMethod
+					CONSTRAINT: ".$dataListToChooseFrom->sql()."
+					====================================
+				",
+				$copyFrom,
+				$newObject
+			);
+		}
+		if($copyFrom->$manyManyMethod()->count()) {
+			foreach($copyFrom->$manyManyMethod() as $manyManyRelation) {
+				$myDataListToChooseFrom = $dataListToChooseFrom
+					->filter(array($manyManyRelation->CopiedFromFieldName($withID = true) => $manyManyRelation->ID))
+					->Sort("Created DESC");
+				$count = $myDataListToChooseFrom->count();
+				if($count == 1 && $newAttachment = $myDataListToChooseFrom->First()) {
+					if($this->recordSession) {self::add_to_session("Found Matching record.", $copyFrom, $newObject);}
+					if(count($extraFields)) {
+						unset($newExtraFieldsArray);
+						$newExtraFieldsArray = array();
+						foreach($extraFields as $extraField) {
+							$newExtraFieldsArray[$extraField] = $newAttachment->$extraField;
+						}
+						if($this->isForReal) {
+							$newObject->$manyManyMethod()->add($newAttachment, $newExtraFieldsArray);
+						}
+					}
+					else {
+						if($this->isForReal) {
+							$newObject->$manyManyMethod()->add($newAttachment);
+						}
+					}
+				}
+				else {
+					if($this->recordSession) {
+						if($count > 1) {
+							self::add_to_session("ERROR: found too many Matching records.", $copyFrom, $newObject);
+						}
+						elseif($count = 0) {
+							self::add_to_session("ERROR: Could not find any Matching records.", $copyFrom, $newObject);
+						}
+						else {
+							self::add_to_session("ERROR: There was an error retrieving the matching record.", $copyFrom, $newObject);
+						}
+					}
+					if($this->isForReal) {
+						$newObject->$fieldNameWithID = 0;
+						$newObject->write();
+					}
+				}
+			}
+		}
+		else {
+			self::add_to_session("copyFrom object does not have a value for", $copyFrom, $newObject);
+		}
+		if($this->recordSession) {self::add_to_session("*** END OF attachToMoreRelevantManyMany ***", $copyFrom, $newObject);}
+		return $this;
+	}
 
 }
 
