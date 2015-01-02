@@ -8,7 +8,7 @@ class CopyFactory extends Object {
 	 * needs to be set manually
 	 * @var Boolean
 	 */
-	private static $debug = false;
+	private static $debug = true;
 
 	/**
 	 * is this a real copy event?
