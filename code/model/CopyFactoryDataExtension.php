@@ -135,7 +135,7 @@ class CopyFactoryDataExtension extends DataExtension {
 				->exclude(array("CopyIntoClassName" => $this->owner->ClassName, "CopyFromClassNameID" => $this->owner->ID));
 			if($source->count()) {
 				$name = "COPY_INTO_GRIDFIELD";
-				$title = _t("CopyFactory.COPY_INTO_TITLE", "Copy actions actioned into this record.");
+				$title = _t("CopyFactory.COPY_INTO_TITLE", "Copy actioned into this record.");
 				$fields->addFieldToTab("Root.Copy", $this->gridFieldMaker($name, $title, $source));
 			}
 			$source = CopyFactoryLog::get()

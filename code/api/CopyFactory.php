@@ -8,7 +8,7 @@ class CopyFactory extends Object {
 	 * needs to be set manually
 	 * @var Boolean
 	 */
-	private static $debug = true;
+	private static $debug = false;
 
 	/**
 	 * is this a real copy event?
@@ -163,7 +163,7 @@ class CopyFactory extends Object {
 			}
 			$copyIntoLine = "";
 			if($copyInto && $copyInto->exists()) {
-				$copyIntoLine = "INTO ".self::title_for_object($copyInto)." - ".$copyInto->ClassName.".".$copyInto->ID."\n";
+				$copyIntoLine = "INTO: ".self::title_for_object($copyInto)." - ".$copyInto->ClassName.".".$copyInto->ID."\n";
 			}
 			debug::log(
 				$copyFromLine.
@@ -260,6 +260,18 @@ class CopyFactory extends Object {
 		$this->ignoreFields[] = $fieldName;
 	}
 
+	/**
+	 *
+	 * @return Boolean
+	 */
+	public function getIsForReal(){
+		return $this->isForReal;
+	}
+
+	/**
+	 *
+	 * @return String
+	 */
 	protected function getCopyFactorySessionName(){
 		return
 			$this->Config()->get("dry_run_for_session_base_name")
@@ -268,6 +280,8 @@ class CopyFactory extends Object {
 			."_".
 			$this->Config()->get("dry_run_for_id");
 	}
+
+
 
 	/*****************************************************
 	 *  COPYING METHODS
@@ -366,11 +380,7 @@ class CopyFactory extends Object {
 		//now we do all the other methods ...
 		if($newObject->hasMethod("doCopyFactory")) {
 			if($this->recordSession) {
-				self::add_to_session("
-					Now calling doCopyFactory ... ",
-					$copyFrom,
-					$newObject
-				);
+				self::add_to_session("Now calling doCopyFactory ... ", $copyFrom, $newObject);
 			}
 			$newObject->doCopyFactory($this, $copyFrom);
 		}
@@ -383,77 +393,81 @@ class CopyFactory extends Object {
 	 * and we want to also copy the children and add it to the
 	 * copied into parent ...
 	 *
-	 * @param DataObject $oldParentObject
-	 * @param DataObject $newParentObject
+	 * @param DataObject $copyFromParent
+	 * @param DataObject $newObjectParent
 	 * @param String $relationalFieldForChildren - this is the field on the parent that provides the children (e.g. Children or Images) WITHOUT the ID part.
 	 * @param String $relationFieldForParent - this is the field on the children that links them back to the parent.
 	 * @param Boolean $copyChildrenAsWell - this is the field on the child that is used as a link back to the object it is being copied from.
 	 *
 	 *  @return CopyFactory
 	 */
-	function copyHasManyRelation($oldParentObject, $newParentObject, $relationalFieldForChildren, $relationFieldForParent, $copyChildrenAsWell = true) {
+	function copyHasManyRelation($copyFromParent, $newObjectParent, $relationalFieldForChildren, $relationFieldForParentWithoutID, $copyChildrenAsWell = true) {
 		if($this->recordSession) {
 			self::add_to_session("
 					====================================
 					COPY HAS-MANY RELATION: $relationalFieldForChildren
-					Children will ".($copyChildrenAsWell ? "also be copied" : "not ")." be copied.
+					Children will ".($copyChildrenAsWell ? "also" : "not ")." be copied.
 					====================================
 				",
-				$oldParentObject,
-				$newParentObject
+				$copyFromParent,
+				$newObjectParent
 			);
 		}
-		foreach($oldParentObject->$relationalFieldForChildren() as $copyFromChildObject) {
+		foreach($copyFromParent->$relationalFieldForChildren() as $copyFromChildObject) {
 			$className = $copyFromChildObject->ClassName;
-			$relationFieldForParentWithID = $relationFieldForParent;
+			$relationFieldForParentWithID = $relationFieldForParentWithoutID."ID";
 			$childCopyField = $copyFromChildObject->CopyFromFieldName($withID = true);
 			// what are we going to do?
 			if($this->recordSession) {
-				self::add_to_session("Creating a new object '$className'", $oldParentObject, $newParentObject);
+				self::add_to_session("Creating a new object '$className'", $copyFromParent, $newObjectParent);
+				self::add_to_session("Adding parent field ($relationFieldForParentWithID) ID: ".$newObjectParent->ID, $copyFromParent, $newObjectParent);
 			}
 
 			//create object and set parent ...
-			$newChildObject = new $className();
-			$newChildObject->$relationFieldForParentWithID = $newParentObject->ID;
+			$newObjectChildObject = new $className();
+			if($this->isForReal) {
+				$newObjectChildObject->$relationFieldForParentWithID = $newObjectParent->ID;
+			}
 
 			//does the child also copy ...
 			if($childCopyField) {
 				//we copy the data here so that we dont run into validation errors
-				$obj = CopyFactory::create($newChildObject);
-				$obj->copyObject($copyFromChildObject, $newChildObject);
+				$obj = CopyFactory::create($newObjectChildObject);
+				$obj->copyObject($copyFromChildObject, $newObjectChildObject);
 				//we reset the copy field here so that the copy can run another
 				//time and do the has-many and many-many parts
-				$newChildObject->$childCopyField = intval($copyFromChildObject->ID);
+				$newObjectChildObject->$childCopyField = intval($copyFromChildObject->ID);
 				//retrieve it again to set more details ...
-				$newChildObject = $className::get()->byID($newChildObject->ID);
+				$newObjectChildObject = $className::get()->byID($newObjectChildObject->ID);
 			}
 
 			// setting parent again - just in case ...
 			if($this->isForReal) {
-				$newChildObject->$relationFieldForParentWithID = $newParentObject->ID;
-				$newChildObject->write();
+				$newObjectChildObject->$relationFieldForParentWithID = $newObjectParent->ID;
+				$newObjectChildObject->write();
 			}
 			if($this->recordSession) {
-				if(!$newChildObject){
-					self::add_to_session("ERROR CHECK 1 - DID NOT CREATE OBJECT LISTED ABOVE", $copyFromChildObject, $newChildObject);
+				if(!$newObjectChildObject){
+					self::add_to_session("ERROR CHECK 1 - DID NOT CREATE OBJECT LISTED ABOVE", $copyFromChildObject, $newObjectChildObject);
 				}
 				else {
-					self::add_to_session("Created object", $copyFromChildObject, $newChildObject);
+					self::add_to_session("Created object", $copyFromChildObject, $newObjectChildObject);
 				}
-				if($newChildObject->$relationFieldForParentWithID != $newParentObject->ID) {
+				if($newObjectChildObject->$relationFieldForParentWithID != $newObjectParent->ID) {
 					self::add_to_session("
 						ERROR CHECK 2:
-						Parent (".$newParentObject->ClassName.") ID is: '".$newParentObject->ID."'
-						Child ('".$newChildObject->ClassName.".".$relationFieldForParentWithID."') is '".$newChildObject->$relationFieldForParentWithID."',
-						but should be ".$newParentObject->ID.".
-						The ID of the child is ".$newChildObject->ID);
+						Parent (".$newObjectParent->ClassName.") ID is: '".$newObjectParent->ID."'
+						Child ('".$newObjectChildObject->ClassName.".".$relationFieldForParentWithID."') is '".$newObjectChildObject->$relationFieldForParentWithID."',
+						but should be ".$newObjectParent->ID.".
+						The ID of the child is ".$newObjectChildObject->ID);
 					//hack fix
+				}
+				else {
+					self::add_to_session("Saved with correct new parent field ($relationFieldForParentWithID) ID: ".$newObjectChildObject->$relationFieldForParentWithID, $copyFromChildObject, $newObjectChildObject);
 				}
 			}
 		}
-		if($this->recordSession) {
-			self::add_to_session("*** END OF copyHasManyRelation ***", $oldParentObject, $newParentObject);
-		}
+		if($this->recordSession) {self::add_to_session("*** END OF copyHasManyRelation ***", $copyFromParent, $newObjectParent);}
 		return $this;
 	}
 
