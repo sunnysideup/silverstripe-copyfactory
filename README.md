@@ -91,25 +91,31 @@ These methods are chainable, here is an example:
      * @param DataObject $copyFrom
      */
     public function doCopyFactory($factory, $copyFrom){
-        $factory
-          ->copyHasManyRelation(
-            $copyFrom,
-            $this,
-            $relationalMethodChildren = "Children",
-            $relationalMethodParent = "ParentID,
-            $copyChildrenAsWell = true,
-          )
-          ->attachToMoreRelevantHasOne(
-            $copyFrom,
-            $this,
-            $hasOneMethod = "MyImage",
-            $dataListToChooseFrom = Image::get()->filter(array("Foo" => "Bar"));
-          )
-          ->copyOriginalManyManyItems(
-            $copyFrom,
-            $this,
-            $manyManyMethod = "MyManyManyDataObjects",
-          );
+      $factory
+        ->copyHasManyRelation(
+          $copyFrom,
+          $this,
+          $relationalMethodChildren = "Children",
+          $relationalMethodParent = "ParentID,
+          $copyChildrenAsWell = true,
+        )
+        ->attachToMoreRelevantHasOne(
+          $copyFrom,
+          $this,
+          $hasOneMethod = "MyImage",
+          $dataListToChooseFrom = Image::get()->filter(array("Foo" => "Bar"));
+        )
+        ->copyOriginalManyManyItems(
+          $copyFrom,
+          $this,
+          $manyManyMethod = "MyManyManyDataObjects",
+        );
+      //other stuff ...
+      if($factory->getIsForReal()) {
+        foreach($copyFrom->MyManyManyWithExtraFields() as $do) {
+          $this->add($do, array("ExtraField" => $do->ExtraField));
+        }
+      }
     }
 ```
 
