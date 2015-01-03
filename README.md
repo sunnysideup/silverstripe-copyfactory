@@ -5,8 +5,7 @@ Copy Factory
 [![Build Status](https://travis-ci.org/sunnysideup/silverstripe-copyfactory.svg?branch=master)](https://travis-ci.org/sunnysideup/silverstripe-copyfactory)
 
 
-This module helps you copy the contents of DataObjects, including their relations.
-
+This module helps you copy the contents of DataObjects, including their relations, using the Silverstripe CMS.
 
 Developer
 -----------------------------------------------
@@ -38,6 +37,8 @@ you can usually find some examples of config options (if any).
   (c). `doCopyFactory` (public method)
 
   (d). `ignore_in_copy_fields` (private static) - in case you are not using the `getIgnoreInCopyFields` method
+
+5. Note that, for each of the copy-able dataobjects, you will have a copy tab appear their CMS fields with all relevant fields.
 
 
 ```php
@@ -83,9 +84,14 @@ you can usually find some examples of config options (if any).
 For the most basic situation (without any special relationships between DataObjects),
 you can leave out the `doCopyFactory` method.  For more complex situations, the following
 methods can be added to a DataObject:
- - `copyOriginalHasOneItem`, `copyHasOneRelation`, `attachToMoreRelevantHasOne`
- - `copyOriginalHasManyItems` (useless), `copyHasManyRelation`, `attachToMoreRelevantHasMany`
- - `copyOriginalManyManyItems`, `attachToMoreRelevantManyMany`
+ - `copyOriginalHasOneItem`: From a copied object, copy the has-one of the copyFrom Object to the newObject. They basically point to the same record.
+ - `copyHasOneRelation`: an object has one child and we want to also copy the child and add it to the copied into parent ...
+ - `attachToMoreRelevantHasOne`: Find the copied ("NEW") equivalent of the old has-one relation and attach it to the newObject ...
+ - `copyOriginalHasManyItems`: Non-sensical.
+ - `copyHasManyRelation`: an object has many children and we want to also copy the children and add them to the copied into parent ...,
+ - `attachToMoreRelevantHasMany`: an object has many children, the children have already been copied, but they are not pointing at the new parent object.
+ - `copyOriginalManyManyItems`: copies Many-Many relationship Without copying the items linked to.
+ - `attachToMoreRelevantManyMany`: finds copied items for a many-many relationship.
 
 
 These methods are chainable, here is an example:
@@ -117,7 +123,7 @@ These methods are chainable, here is an example:
 To do more customised copying, you can create a new copy factory like this:
 
 ```php
-    function myCustomCopy(){
+    function myRandomMethodForCopying(){
       $factory = CopyFactory::create($myDataObject);
       $factory
         ->setIsForReal(true);

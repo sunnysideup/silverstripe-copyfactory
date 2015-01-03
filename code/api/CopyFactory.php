@@ -299,6 +299,8 @@ class CopyFactory extends Object {
 	 *****************************************************/
 
 	/**
+	 * Copy one object into another including has-one fields
+	 *
 	 * @param DataObject $copyFrom
 	 * @param DataObject $newObject
 	 * @param Boolean $overwriteValues - overwrite values that exist
@@ -387,6 +389,8 @@ class CopyFactory extends Object {
 	}
 
 	/**
+	 * From a copied object, copy the has-one of the copyFrom Object to the newObject.
+	 * Old and new copy point to the same has-one record.
 	 *
 	 * @param DataObject $copyFromParent
 	 * @param DataObject $newObjectParent
@@ -415,7 +419,7 @@ class CopyFactory extends Object {
 	}
 
 	/**
-	 * This is used when an object has one child
+	 * Usage: an object has one child
 	 * and we want to also copy the child and add it to the
 	 * copied into parent ...
 	 *
@@ -489,8 +493,7 @@ class CopyFactory extends Object {
 	}
 
 	/**
-	 * find the copied ("NEW") equivalent of the old has-one relation
-	 * and attach it ...
+	 * Usage: Find the copied ("NEW") equivalent of the old has-one relation and attach it to the newObject ...
 	 * @param DataObject $copyFrom
 	 * @param DataObject $newObject
 	 * @param String $hasOneMethod - the fieldname (method) of the has one relations (e.g. MyOtherDataObject)
@@ -550,8 +553,7 @@ class CopyFactory extends Object {
 	}
 
 	/**
-	 * This is used when an object has many children
-	 * and but we do NOT copy the children ...
+	 * Usage: an object has many children but we do NOT copy the children ...
 	 *
 	 * @param DataObject $copyFromParent
 	 * @param DataObject $newObjectParent
@@ -565,8 +567,8 @@ class CopyFactory extends Object {
 	}
 
 	/**
-	 * This is used when an object has many children
-	 * and we want to also copy the children and add it to the
+	 * Usage: an object has many children
+	 * and we want to also copy the children and add them to the
 	 * copied into parent ...
 	 *
 	 * @param DataObject $copyFromParent
@@ -636,9 +638,7 @@ class CopyFactory extends Object {
 	}
 
 	/**
-	 * This is used when an object has many children
-	 * and we want to also copy the children and add it to the
-	 * copied into parent ...
+	 * Usage: an object has many children, the children have already been copied, but they are not pointing at the new parent object.
 	 *
 	 * @param DataObject $copyFromParent
 	 * @param DataObject $newObjectParent
@@ -698,7 +698,7 @@ class CopyFactory extends Object {
 	}
 
 	/***
-	 *
+	 * finds copied items for a many-many relationship
 	 * make sure the many-many relation is also copy-able
 	 * @param DataObject $copyFrom
 	 * @param DataObject $newObject
