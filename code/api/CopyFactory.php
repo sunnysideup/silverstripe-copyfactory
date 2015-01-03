@@ -262,6 +262,17 @@ class CopyFactory extends Object {
 
 	/**
 	 *
+	 * @param Boolean $b
+	 *
+	 * @return CopyFactory
+	 */
+	public function setIsForReal($b){
+		return $this->isForReal = $b;
+		return $this;
+	}
+
+	/**
+	 *
 	 * @return Boolean
 	 */
 	public function getIsForReal(){
@@ -375,7 +386,15 @@ class CopyFactory extends Object {
 		return $this;
 	}
 
-	function copyOriginalHasOneItem($copyFromParent, $newObjectParent, $relationalFieldForChildWithoutID) {
+	/**
+	 *
+	 * @param DataObject $copyFromParent
+	 * @param DataObject $newObjectParent
+	 * @param String $relationalFieldForChildWithoutID - e.g. MyImage
+	 *
+	 * @return CopyFactory
+	 */
+	public function copyOriginalHasOneItem($copyFromParent, $newObjectParent, $relationalFieldForChildWithoutID) {
 		if($this->recordSession) {
 			self::add_to_session("
 					====================================
@@ -402,10 +421,11 @@ class CopyFactory extends Object {
 	 *
 	 * @param DataObject $copyFromParent
 	 * @param DataObject $newObjectParent
-	 * @param String $relationalFieldForChildren - this is the field on the parent that provides the children (e.g. Children or Images) WITHOUT the ID part.
-	 * @param String $relationFieldForParent - this is the field on the children that links them back to the parent.
+	 * @param String $relationalFieldForChildWithoutID -
+	 *    this is the field on the parent that provides
+	 *    its child (the single-child / has one child )WITHOUT the ID part.
 	 *
-	 *  @return CopyFactory
+	 * @return CopyFactory
 	 */
 	function copyHasOneRelation($copyFromParent, $newObjectParent, $relationalFieldForChildWithoutID) {
 		if($this->recordSession) {self::add_to_session("
@@ -552,7 +572,7 @@ class CopyFactory extends Object {
 	 * @param DataObject $copyFromParent
 	 * @param DataObject $newObjectParent
 	 * @param String $relationalFieldForChildren - this is the field on the parent that provides the children (e.g. Children or Images) WITHOUT the ID part.
-	 * @param String $relationFieldForParent - this is the field on the children that links them back to the parent.
+	 * @param String $relationFieldForParentWithoutID - this is the field on the children that links them back to the parent.
 	 *
 	 * @return CopyFactory
 	 */
@@ -623,7 +643,7 @@ class CopyFactory extends Object {
 	 * @param DataObject $copyFromParent
 	 * @param DataObject $newObjectParent
 	 * @param String $relationalFieldForChildren - this is the field on the parent that provides the children (e.g. Children or Images) WITHOUT the ID part.
-	 * @param String $relationFieldForParent - this is the field on the children that links them back to the parent.
+	 * @param String $relationFieldForParentWithoutID - this is the field on the children that links them back to the parent.
 	 * @param DataList $dataListToChooseFrom - selection of children that are best matches ...
 	 *
 	 * @return CopyFactory

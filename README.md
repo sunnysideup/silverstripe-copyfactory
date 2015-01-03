@@ -29,15 +29,15 @@ you can usually find some examples of config options (if any).
 
 3. add the CopyFactoryDataExtension as an extension to any Copy-Able DataObject.
 
-4. After that you can add the following variables and methods (optional)
+4. After that you can add the following variables and methods to your DataObject (optional):
 
   (a). `additionalFiltersForCopyableObjects` (public method) - returns an array of fields to ignore in copy.
 
   (b). `getIgnoreInCopyFields` (public method) - returns an array of fields to ignore in copy.
 
-  (c). `doCopyFactory (public method)
+  (c). `doCopyFactory` (public method)
 
-  (d). `ignore_in_copy_fields` (private static) - in case you are not using the getIgnoreInCopyFields method
+  (d). `ignore_in_copy_fields` (private static) - in case you are not using the `getIgnoreInCopyFields` method
 
 
 ```php
@@ -83,8 +83,8 @@ you can usually find some examples of config options (if any).
 For the most basic situation (without any special relationships between DataObjects),
 you can leave out the `doCopyFactory` method.  For more complex situations, the following
 methods can be added to a DataObject:
- - `copyHasOneRelation`, `attachToMoreRelevantHasOne`
- - `copyOriginalHasManyItems, `copyHasManyRelation`, `attachToMoreRelevantHasMany`
+ - `copyOriginalHasOneItem`, `copyHasOneRelation`, `attachToMoreRelevantHasOne`
+ - `copyOriginalHasManyItems` (useless), `copyHasManyRelation`, `attachToMoreRelevantHasMany`
  - `copyOriginalManyManyItems`, `attachToMoreRelevantManyMany`
 
 
@@ -100,31 +100,33 @@ These methods are chainable, here is an example:
     public function doCopyFactory($factory, $copyFrom){
       $factory
         ->copyHasManyRelation(
-          $copyFrom,
-          $this,
-          $relationalMethodChildren = "Children",
-          $relationalMethodParent = "ParentID,
-          $copyChildrenAsWell = true,
+          //...
         )
         ->attachToMoreRelevantHasOne(
-          $copyFrom,
-          $this,
-          $hasOneMethod = "MyImage",
-          $dataListToChooseFrom = Image::get()->filter(array("Foo" => "Bar"));
+          //...
         )
         ->copyOriginalManyManyItems(
-          $copyFrom,
-          $this,
-          $manyManyMethod = "MyManyManyDataObjects",
+          //...
         );
       //other stuff ...
       if($factory->getIsForReal()) {
-        foreach($copyFrom->MyManyManyWithExtraFields() as $do) {
-          $this->add($do, array("ExtraField" => $do->ExtraField));
-        }
+          //...
       }
     }
 ```
+To do more customised copying, you can create a new copy factory like this:
+
+```php
+    function myCustomCopy(){
+      $factory = CopyFactory::create($myDataObject);
+      $factory
+        ->setIsForReal(true);
+        ->copyObject($myOldDataObject, $myNewDataObject);
+      //etc...
+    }
+
+```
+
 
 Complexities to consider
 ============================
