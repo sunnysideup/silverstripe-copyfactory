@@ -120,32 +120,34 @@ class CopyFactoryDataExtension extends DataExtension {
 					)
 				);
 			}
-			$source = CopyFactoryLog::get()
-				->filter(array("CopyCausingClassName" => $this->owner->ClassName, "CopyCausingClassNameID" => $this->owner->ID))
-				->exclude(array("CopyIntoClassName" => $this->owner->ClassName, "CopyIntoClassNameID" => $this->owner->ID))
-				->exclude(array("CopyIntoClassName" => $this->owner->ClassName, "CopyFromClassNameID" => $this->owner->ID));
-			if($source->count()) {
-				$name = "COPY_CAUSING_GRIDFIELD";
-				$title = _t("CopyFactory.COPY_CAUSING_TITLE", "Copy actions originated from this record.");
-				$fields->addFieldToTab("Root.Copy", $this->gridFieldMaker($name, $title, $source));
-			}
-			$source = CopyFactoryLog::get()
-				->filter(array("CopyIntoClassName" => $this->owner->ClassName, "CopyIntoClassNameID" => $this->owner->ID))
-				//->exclude(array("CopyCausingClassName" => $this->owner->ClassName, "CopyCausingClassNameID" => $this->owner->ID))
-				->exclude(array("CopyIntoClassName" => $this->owner->ClassName, "CopyFromClassNameID" => $this->owner->ID));
-			if($source->count()) {
-				$name = "COPY_INTO_GRIDFIELD";
-				$title = _t("CopyFactory.COPY_INTO_TITLE", "Copy actioned into this record.");
-				$fields->addFieldToTab("Root.Copy", $this->gridFieldMaker($name, $title, $source));
-			}
-			$source = CopyFactoryLog::get()
-				->filter(array("CopyIntoClassName" => $this->owner->ClassName, "CopyFromClassNameID" => $this->owner->ID))
-				->exclude(array("CopyIntoClassName" => $this->owner->ClassName, "CopyIntoClassNameID" => $this->owner->ID))
-				->exclude(array("CopyCausingClassName" => $this->owner->ClassName, "CopyCausingClassNameID" => $this->owner->ID));
-			if($source->count()) {
-				$name = "COPY_FROM_GRIDFIELD";
-				$title = _t("CopyFactory.COPY_FROM_TITLE", "Copy actions from this record into another record.");
-				$fields->addFieldToTab("Root.Copy", $this->gridFieldMaker($name, $title, $source));
+			if(Config;:inst()->get("CopyFactory", "debug")) {
+				$source = CopyFactoryLog::get()
+					->filter(array("CopyCausingClassName" => $this->owner->ClassName, "CopyCausingClassNameID" => $this->owner->ID))
+					->exclude(array("CopyIntoClassName" => $this->owner->ClassName, "CopyIntoClassNameID" => $this->owner->ID))
+					->exclude(array("CopyIntoClassName" => $this->owner->ClassName, "CopyFromClassNameID" => $this->owner->ID));
+				if($source->count()) {
+					$name = "COPY_CAUSING_GRIDFIELD";
+					$title = _t("CopyFactory.COPY_CAUSING_TITLE", "Copy actions originated from this record.");
+					$fields->addFieldToTab("Root.Copy", $this->gridFieldMaker($name, $title, $source));
+				}
+				$source = CopyFactoryLog::get()
+					->filter(array("CopyIntoClassName" => $this->owner->ClassName, "CopyIntoClassNameID" => $this->owner->ID))
+					//->exclude(array("CopyCausingClassName" => $this->owner->ClassName, "CopyCausingClassNameID" => $this->owner->ID))
+					->exclude(array("CopyIntoClassName" => $this->owner->ClassName, "CopyFromClassNameID" => $this->owner->ID));
+				if($source->count()) {
+					$name = "COPY_INTO_GRIDFIELD";
+					$title = _t("CopyFactory.COPY_INTO_TITLE", "Copy actioned into this record.");
+					$fields->addFieldToTab("Root.Copy", $this->gridFieldMaker($name, $title, $source));
+				}
+				$source = CopyFactoryLog::get()
+					->filter(array("CopyIntoClassName" => $this->owner->ClassName, "CopyFromClassNameID" => $this->owner->ID))
+					->exclude(array("CopyIntoClassName" => $this->owner->ClassName, "CopyIntoClassNameID" => $this->owner->ID))
+					->exclude(array("CopyCausingClassName" => $this->owner->ClassName, "CopyCausingClassNameID" => $this->owner->ID));
+				if($source->count()) {
+					$name = "COPY_FROM_GRIDFIELD";
+					$title = _t("CopyFactory.COPY_FROM_TITLE", "Copy actions from this record into another record.");
+					$fields->addFieldToTab("Root.Copy", $this->gridFieldMaker($name, $title, $source));
+				}
 			}
 		}
 	}
