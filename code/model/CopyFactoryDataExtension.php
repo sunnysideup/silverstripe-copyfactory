@@ -195,24 +195,25 @@ class CopyFactoryDataExtension extends DataExtension {
 
 	/**
 	 *
-	 * @var DataObject
+	 * @var array of DataObject
 	 */
-	private static $my_original_object = null;
+	private static $my_original_object = array();
 
 	/**
 	 * finds the obj
 	 * @return DataObject
 	 */
 	private function FindOriginalObjectClassName(){
-		if(!self::$my_original_object) {
+		$key = $this->owner->ClassName.$this->owner->ID;
+		if(!isset(self::$my_original_object[$key])) {
 			$obj = $this->owner;
 			while($obj->hasExtension("CopyFactoryDataExtension")) {
 				$finalObject = $obj;
 				$obj = Injector::inst()->get(get_parent_class($obj));
 			}
-			self::$my_original_object = $finalObject;
+			self::$my_original_object[$key] = $finalObject;
 		}
-		return self::$my_original_object->ClassName;
+		return self::$my_original_object[$key]->ClassName;
 	}
 
 
