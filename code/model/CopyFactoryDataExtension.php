@@ -30,7 +30,7 @@ class CopyFactoryDataExtension extends DataExtension {
 		$changeMessage =
 					"<p class=\"message good\">".
 						_t("CopyFactory.CHANGE_SETTINGS", "You can change the settings for copying in").
-						" <a href=\"/admin/settings/\">"._t("CopyFactory.SITE_CONFIG", "The Site Config (see Copy Tab)")."</a>,".
+						" <a href=\"/admin/settings/\">"._t("CopyFactory.SITE_CONFIG", "The Site Config (see Copy Tab)")."</a>. ".
 						_t("CopyFactory.TURN_OFF_WHEN_NOT_IN_USE", "It is recommended you turn off the copy facility when not in use, as it will slow down the CMS.")."
 					</p>";
 		if($this->owner->exists()) {
@@ -113,7 +113,7 @@ class CopyFactoryDataExtension extends DataExtension {
 						"<h2>".
 						_t(
 							'CopyFactory.COPY_FACTORY_TURNED_OFF',
-							"Copying of records is currently not turned on."
+							"Copying of records is currently turned off."
 						).
 						"</h2>".
 						$changeMessage
