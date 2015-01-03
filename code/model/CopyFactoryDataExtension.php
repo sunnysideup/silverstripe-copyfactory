@@ -120,7 +120,7 @@ class CopyFactoryDataExtension extends DataExtension {
 					)
 				);
 			}
-			if(Config;:inst()->get("CopyFactory", "debug")) {
+			if(Config::inst()->get("CopyFactory", "debug")) {
 				$source = CopyFactoryLog::get()
 					->filter(array("CopyCausingClassName" => $this->owner->ClassName, "CopyCausingClassNameID" => $this->owner->ID))
 					->exclude(array("CopyIntoClassName" => $this->owner->ClassName, "CopyIntoClassNameID" => $this->owner->ID))
