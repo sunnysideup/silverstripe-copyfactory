@@ -608,7 +608,7 @@ class CopyFactory extends Object {
 				//$newObjectChildObject->$childCopyField = intval($copyFromChildObject->ID);
 				//$newObjectChildObject->write();
 				//retrieve it again to set more details ...
-				$newObjectChildObject = $className::get()->byID($newObjectChildObject->ID);
+				//$newObjectChildObject = $className::get()->byID($newObjectChildObject->ID);
 
 				// setting parent again - just in case ...
 				$newObjectChildObject->$relationFieldForParentWithID = $newObjectParent->ID;
