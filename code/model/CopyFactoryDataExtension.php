@@ -18,6 +18,7 @@ class CopyFactoryDataExtension extends DataExtension {
 	}
 
 	public function updateCMSFields(FieldList $fields) {
+
 		parent::updateCMSFields($fields);
 		$className = $this->owner->ClassName;
 		$uncompletedField = $this->owner->CopyFromFieldName();
@@ -34,6 +35,13 @@ class CopyFactoryDataExtension extends DataExtension {
 						_t("CopyFactory.TURN_OFF_WHEN_NOT_IN_USE", "It is recommended you turn off the copy facility when not in use, as it will slow down the CMS.")."
 					</p>";
 		if($this->owner->exists()) {
+			//reload goes here ... @todo
+			/*
+			if($this->owner->ID && Session::get("CopyFactoryReload") == $this->owner->ID) {
+				Session::set("CopyFactoryReload", 0);
+				return Controller::curr()->redirectBack();
+			}
+			*/
 			if($this->owner->$completedFieldWithID) {
 				if($obj = $this->owner->$completedField()) {
 					$fields->addFieldToTab(
@@ -261,13 +269,26 @@ class CopyFactoryDataExtension extends DataExtension {
 	}
 
 	/**
+	 * mark that we are doing a copy ...
+	 */
+	function onBeforeWrite(){
+		parent::onBeforeWrite();
+		if(isset($this->owner->ID) && $this->owner->ID) {
+			$fieldNameWithID = $this->owner->CopyFromFieldName(true);
+			if(isset($_POST[$fieldNameWithID]) && $_POST[$fieldNameWithID]) {
+				Session::set("CopyFactoryReload", $this->owner->ID);
+			}
+		}
+	}
+
+	/**
 	 * we run the actual copying onAfterWrite
 	 */
 	function onAfterWrite(){
 		parent::onAfterWrite();
 		if(SiteConfig::current_site_config()->AllowCopyingOfRecords) {
-			$fieldName = $this->owner->CopyFromFieldName();
-			$fieldNameWithID = $fieldName."ID";
+			$fieldName = $this->owner->CopyFromFieldName(false);
+			$fieldNameWithID = $this->owner->CopyFromFieldName(true);
 			if($this->owner->$fieldNameWithID) {
 				if($copyFrom = $this->owner->$fieldName()) {
 					$factory = CopyFactory::create($this->owner);
