@@ -675,7 +675,7 @@ class CopyFactory extends Object {
 			);
 		}
 		//remove current ones on NewObject
-		if($this->forReal) {
+		if($this->isForReal) {
 			$newObject->$manyManyMethod()->removeAll();
 		}
 		if($this->isForReal) {
@@ -727,7 +727,7 @@ class CopyFactory extends Object {
 			);
 		}
 		//remove current ones on NewObject
-		if($this->forReal) {
+		if($this->isForReal) {
 			$newObject->$manyManyMethod()->removeAll();
 		}
 		if($copyFrom->$manyManyMethod()->count()) {
