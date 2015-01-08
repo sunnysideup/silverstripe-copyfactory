@@ -674,6 +674,10 @@ class CopyFactory extends Object {
 				$copyFrom, $newObject
 			);
 		}
+		//remove current ones on NewObject
+		if($this->forReal) {
+			$newObject->$manyManyMethod()->removeAll();
+		}
 		if($this->isForReal) {
 			if(count($extraFields) == 0) {
 				$ids = $copyFrom->$manyManyMethod()->Column("ID");
@@ -722,6 +726,10 @@ class CopyFactory extends Object {
 				$newObject
 			);
 		}
+		//remove current ones on NewObject
+		if($this->forReal) {
+			$newObject->$manyManyMethod()->removeAll();
+		}
 		if($copyFrom->$manyManyMethod()->count()) {
 			foreach($copyFrom->$manyManyMethod() as $manyManyRelation) {
 				$myDataListToChooseFrom = $dataListToChooseFrom
@@ -759,8 +767,7 @@ class CopyFactory extends Object {
 						}
 					}
 					if($this->isForReal) {
-						$newObject->$fieldNameWithID = 0;
-						$newObject->write();
+						//nothing to do here as they have already been deleted.
 					}
 				}
 			}
