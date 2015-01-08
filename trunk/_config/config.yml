@@ -1,9 +1,0 @@
----
-Name: copyfactory_config
-Before: 'mysite/*'
-After: 'framework/*','cms/*'
----
-
-SiteConfig:
-  extensions:
-    - CopyFactorySiteTreeExtension
