@@ -426,12 +426,13 @@ class CopyFactory extends Object {
 	 * @param DataObject $copyFromParent
 	 * @param DataObject $newObjectParent
 	 * @param String $relationalFieldForChildWithoutID -
+	 * @param String $relationalFieldForParentWithoutID - if it is a has_one to has_one relationship only!!!
 	 *    this is the field on the parent that provides
 	 *    its child (the single-child / has one child )WITHOUT the ID part.
 	 *
 	 * @return CopyFactory
 	 */
-	function copyHasOneRelation($copyFromParent, $newObjectParent, $relationalFieldForChildWithoutID) {
+	function copyHasOneRelation($copyFromParent, $newObjectParent, $relationalFieldForChildWithoutID, $relationalFieldForParentWithoutID = "") {
 		if($this->recordSession) {self::add_to_session("
 			====================================
 			COPY HAS-ONE RELATION: $relationalFieldForChildWithoutID
@@ -439,53 +440,57 @@ class CopyFactory extends Object {
 			", $copyFromParent, $newObjectParent);
 		}
 		if($copyFromChildObject = $copyFromParent->$relationalFieldForChildWithoutID()) {
-			$className = $copyFromChildObject->ClassName;
-			$childCopyField = $copyFromChildObject->CopyFromFieldName($withID = true);
-			// what are we going to do?
-			if($this->recordSession) {
-				self::add_to_session("Creating a new object '$className' linking to '$relationalFieldForChildWithoutID' in parent.", $copyFromParent, $newObjectParent);
-			}
-
-			//create object and set parent ...
-			$newObjectChildObject = $className::create();
-			$newObjectChildObject->ClassName = $className;
-			//does the child also copy ...
-			//we copy the data here so that we dont run into validation errors
-			$obj = CopyFactory::create($newObjectChildObject);
-			$obj->copyObject($copyFromChildObject, $newObjectChildObject);
-
-			if($this->isForReal) {
-				//we reset the copy field here so that the copy can run another
-				//time and do the has-many and many-many parts
-				$newObjectChildObject->$childCopyField = intval($copyFromChildObject->ID);
-				$relationalFieldForChildWithID = $relationalFieldForChildWithoutID."ID";
-				$newObjectChildObject->$relationalFieldForChildWithID = $newObjectChildObject->ID;
-				$newObjectChildObject->write();
-				$newObjectChildObject = $className::get()->byID($newObjectChildObject->ID);
-			}
-
-			// setting child again - just in case ...
-			if($this->isForReal) {
-				$newObjectChildObject->$relationalFieldForChildWithID = $newObjectChildObject->ID;
-				$newObjectChildObject->write();
-			}
-			if($this->recordSession) {
-				if(!$newObjectChildObject){
-					self::add_to_session("ERROR:  did not create object listed above", $copyFromChildObject, $newObjectChildObject);
+			if($copyFromChildObject->exists()) {
+				$className = $copyFromChildObject->ClassName;
+				// what are we going to do?
+				if($this->recordSession) {
+					self::add_to_session("Creating a new object '$className' linking to '$relationalFieldForChildWithoutID' in parent.", $copyFromParent, $newObjectParent);
 				}
-				else {
-					self::add_to_session("CREATED object", $copyFromChildObject, $newObjectChildObject);
+
+				//create object and set parent ...
+				$newObjectChildObject = $className::create();
+				$newObjectChildObject->ClassName = $className;
+				//does the child also copy ...
+				//we copy the data here so that we dont run into validation errors
+				$obj = CopyFactory::create($newObjectChildObject);
+				$obj->copyObject($copyFromChildObject, $newObjectChildObject);
+
+				if($this->isForReal) {
+					if($relationalFieldForParentWithoutID) {
+						$relationalFieldForParentWithID = $relationalFieldForParentWithoutID."ID";
+						$newObjectChildObject->$relationalFieldForParentWithID = $newObjectParent->ID;
+					}
+					$newObjectChildObject->write();
+					$newObjectChildObject = $className::get()->byID($newObjectChildObject->ID);
+					//attach to parent ...
+					$relationalFieldForChildWithID = $relationalFieldForChildWithoutID."ID";
+					$newObjectParent->$relationalFieldForChildWithID = $newObjectChildObject->ID;
+					$newObjectParent->write();
 				}
-				if($newObjectParent->$relationalFieldForChildWithID != $newObjectChildObject->ID) {
-					self::add_to_session(
-						"ERROR: broken link ... '".$newObjectParent->$relationalFieldForChildWithID."' is not equal to '".$newObjectChildObject->ID."'",
-						$copyFromChildObject,
-						$newObjectChildObject
-					);
-					//hack fix
+
+				// setting child again - just in case ...
+				if($this->isForReal) {
+					$newObjectParent->$relationalFieldForChildWithID = $newObjectChildObject->ID;
+					$newObjectParent->write();
 				}
-				else {
-					self::add_to_session("Saved with correct new parent field ($relationFieldForParentWithID) ID: ".$newObjectChildObject->$relationFieldForParentWithID, $copyFromChildObject, $newObjectChildObject);
+				if($this->recordSession) {
+					if(!$newObjectChildObject){
+						self::add_to_session("ERROR:  did not create object listed above", $copyFromChildObject, $newObjectChildObject);
+					}
+					else {
+						self::add_to_session("CREATED object", $copyFromChildObject, $newObjectChildObject);
+					}
+					if($newObjectParent->$relationalFieldForChildWithID != $newObjectChildObject->ID) {
+						self::add_to_session(
+							"ERROR: broken link ... '".$newObjectParent->$relationalFieldForChildWithID."' is not equal to '".$newObjectChildObject->ID."'",
+							$copyFromChildObject,
+							$newObjectChildObject
+						);
+						//hack fix
+					}
+					else {
+						self::add_to_session("Saved with correct new parent field ($relationFieldForParentWithID) ID: ".$newObjectChildObject->$relationFieldForParentWithID, $copyFromChildObject, $newObjectChildObject);
+					}
 				}
 			}
 		}
