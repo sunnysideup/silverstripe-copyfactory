@@ -44,14 +44,22 @@ class CopyFactorySiteTreeExtension extends DataExtension {
 			$lastChanged = _t('CopyFactory.NO_BACKUP_IS_AVAILABLE', 'No Backup is Available ... ');
 		}
 		if(Permission::check("ADMIN")) {
-			if($fileLocation = $this->owner->Config()->get("full_location_for_db_backup_file")) {
-				if($this->owner->AllowCopyingOfRecords) {
+			if($this->owner->AllowCopyingOfRecords) {
+				if($fileLocation = $this->owner->Config()->get("full_location_for_db_backup_file")) {
 					$actions->push(
 						new FormAction(
 							'doMakeDatabaseBackup',
 							_t('CopyFactory.MAKE_DATABASE_BACKUP', 'Make Database Backup')."; ".$lastChanged
 						)
 					);
+					if(file_exists($fileLocation)) {
+						$actions->push(
+							new FormAction(
+								'doRestoreDatabaseBackup',
+								_t('CopyFactory.RESTORE_DB_BACKUP_NOW', 'Restore Database Backup')
+							)
+						);
+					}
 				}
 			}
 		}
@@ -71,7 +79,8 @@ class CopyFactorySiteTreeExtension_LeftAndMainExtension extends LeftAndMainExten
 	 * @inherit
 	 */
 	private static $allowed_actions = array(
-		'doMakeDatabaseBackup'
+		'doMakeDatabaseBackup',
+		'restoreDatabaseBackup'
 	);
 
 	public function doMakeDatabaseBackup() {
@@ -81,6 +90,18 @@ class CopyFactorySiteTreeExtension_LeftAndMainExtension extends LeftAndMainExten
 		}
 		else {
 			$message = _t('CopyFactory.DB_COPY_NOT_MADE', 'Database Copy Could * Not * Be Made').": $outcome";
+		}
+		$this->owner->response->addHeader('X-Status', $message);
+		return $this->owner->getResponseNegotiator()->respond($this->owner->request);
+	}
+
+	public function doRestoreDatabaseBackup() {
+		$outcome = $this->restoreDatabaseBackup();
+		if($outcome) {
+			$message = _t('CopyFactory.DB_RESTORED', 'Database Restored');
+		}
+		else {
+			$message = _t('CopyFactory.DB_NOT_RESTORED', 'Database * NOT * Restored');
 		}
 		$this->owner->response->addHeader('X-Status', $message);
 		return $this->owner->getResponseNegotiator()->respond($this->owner->request);
@@ -124,10 +145,30 @@ class CopyFactorySiteTreeExtension_LeftAndMainExtension extends LeftAndMainExten
 					}
 					rename($fileLocation, $lowerFileLocation);
 				}
-				$command = "mysqldump -u ".$databaseConfig["username"]." -p".$databaseConfig["password"]."x ".$databaseConfig["database"]." >  ".$fileLocation;
+				$command = "mysqldump -u ".$databaseConfig["username"]." -p".$databaseConfig["password"]." ".$databaseConfig["database"]." >  ".$fileLocation;
 				return exec($command);
 			}
 		}
+	}
+
+	/**
+	 * copies back up files up one ...
+	 * @return Boolean
+	 */
+	private function restoreDatabaseBackup(){
+		global $databaseConfig;
+		if(Permission::check("ADMIN")) {
+			$this->makeDatabaseBackup();
+			if($fileLocation = Config::inst()->get("SiteConfig", "full_location_for_db_backup_file")) {
+				$fileLocation = $fileLocation.".0.bak";
+				if(file_exists($fileLocation)) {
+					$command = "mysql -u ".$databaseConfig["username"]." -p".$databaseConfig["password"]." ".$databaseConfig["database"]." <  ".$fileLocation;
+					exec($command);
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 }
