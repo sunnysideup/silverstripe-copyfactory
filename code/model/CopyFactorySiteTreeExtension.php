@@ -3,6 +3,12 @@
 
 class CopyFactorySiteTreeExtension extends DataExtension {
 
+	/**
+	 * location for backup file e.g. /var/backups/db.sql
+	 * @var String
+	 */
+	private static $full_location_for_db_backup_file = "";
+
 	private static $db = array(
 		//meta title embelishments
 		'AllowCopyingOfRecords' => 'Int'
@@ -22,6 +28,106 @@ class CopyFactorySiteTreeExtension extends DataExtension {
 				)
 			));
 		return $fields;
+	}
+
+	/**
+	 * Adds a button the Site Config page of the CMS to rebuild the Lucene search index.
+	 * @param FieldList $actions
+	 */
+	public function updateCMSActions(FieldList $actions) {
+		$fileLocation = $this->owner->Config()->get("full_location_for_db_backup_file");
+		if(file_exists($fileLocation)) {
+			$lastChanged = _t('CopyFactory.BACKUP_WAS_LAST_MADE', 'last backup ... ')
+				. date ("F d Y H:i:s.", filemtime($fileLocation));
+		}
+		else {
+			$lastChanged = _t('CopyFactory.NO_BACKUP_IS_AVAILABLE', 'No Backup is Available ... ');
+		}
+		if(Permission::check("ADMIN")) {
+			if($fileLocation = $this->owner->Config()->get("full_location_for_db_backup_file")) {
+				if($this->owner->AllowCopyingOfRecords) {
+					$actions->push(
+						new FormAction(
+							'doMakeDatabaseBackup',
+							_t('CopyFactory.MAKE_DATABASE_BACKUP', 'Make Database Backup')."; ".$lastChanged
+						)
+					);
+				}
+			}
+		}
+	}
+}
+
+class CopyFactorySiteTreeExtension_LeftAndMainExtension extends LeftAndMainExtension {
+
+	/**
+	 *
+	 * @var Int
+	 */
+	private static $max_db_copies = 3;
+
+	/**
+	 *
+	 * @inherit
+	 */
+	private static $allowed_actions = array(
+		'doMakeDatabaseBackup'
+	);
+
+	public function doMakeDatabaseBackup() {
+		$outcome = $this->makeDatabaseBackup();
+		if(!$outcome) {
+			$message = _t('CopyFactory.DB_COPY_MADE', 'Database Copy Made');
+		}
+		else {
+			$message = _t('CopyFactory.DB_COPY_NOT_MADE', 'Database Copy Could * Not * Be Made').": $outcome";
+		}
+		$this->owner->response->addHeader('X-Status', $message);
+		return $this->owner->getResponseNegotiator()->respond($this->owner->request);
+	}
+
+	/**
+	 * copies back up files up one ...
+	 * @return Mixed
+	 */
+	private function makeDatabaseBackup(){
+		global $databaseConfig;
+		if(Permission::check("ADMIN")) {
+			if($fileLocation = Config::inst()->get("SiteConfig", "full_location_for_db_backup_file")) {
+				$copyFileLocation = $fileLocation;
+				$max = $this->owner->Config()->get("max_db_copies");
+				for($i = $max; $i > -1; $i--) {
+					$lowerFileLocation = $fileLocation.".".($i).".bak";
+					$j = $i + 1;
+					$higherFileLocation = $fileLocation.".".$j.".bak";
+					if($i == $max) {
+						if(file_exists($lowerFileLocation)) {
+							unlink($lowerFileLocation);
+						}
+					}
+					else {
+						if(file_exists($lowerFileLocation)) {
+							if(file_exists($higherFileLocation)) {
+								unlink($higherFileLocation);
+							}
+							rename($lowerFileLocation, $higherFileLocation);
+						}
+					}
+				}
+				if(!isset($lowerFileLocation)) {
+					$lowerFileLocation = $fileLocation.".0.bak";
+				}
+
+				if(file_exists($fileLocation)) {
+					if(file_exists($lowerFileLocation)) {
+						unlink($lowerFileLocation);
+					}
+					rename($fileLocation, $lowerFileLocation);
+				}
+				$command = "mysqldump -u ".$databaseConfig["username"]." -p".$databaseConfig["password"]."x ".$databaseConfig["database"]." >  ".$fileLocation;
+				return exec($command);
+			}
+		}
 	}
 
 }
