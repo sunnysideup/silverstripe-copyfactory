@@ -177,7 +177,8 @@ class CopyFactoryDataExtension extends DataExtension {
 	}
 
 	/**
-	 *
+	 * The field that indicate where the object shall be copied FROM
+	 * note the future tense.
 	 * @return String
 	 */
 	public function CopyFromFieldName($withID = false){
@@ -190,7 +191,9 @@ class CopyFactoryDataExtension extends DataExtension {
 	}
 
 	/**
-	 *
+	 * The field that indicates where the object was copied FROM
+	 * note the past tense ...
+	 * (links to "parent" object)
 	 * @return String
 	 */
 	public function CopiedFromFieldName($withID = false){

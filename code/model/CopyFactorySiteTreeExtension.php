@@ -18,7 +18,7 @@ class CopyFactorySiteTreeExtension extends DataExtension {
 	function updateCMSFields(FieldList $fields) {
 		$fields->addFieldToTab(
 			'Root.Copy',
-			new DropdownField(
+			$myDD = new DropdownField(
 				"AllowCopyingOfRecords",
 				_t("CopyFactory.ALLOW_COPYING_OF_RECORDS", "Allow Copying of Records"),
 				array(
@@ -27,6 +27,7 @@ class CopyFactorySiteTreeExtension extends DataExtension {
 					2 => _t("CopyFactory.ALLOW_COPYING", "Allow copying of records (please use with care)")
 				)
 			));
+			$myDD->setRightTitle(_t("CopyFactory.TURN_IT_OFF", "It is recommended to turn on the ability to copy records only when required and to turn it off between copy sessions."));
 		return $fields;
 	}
 

@@ -38,6 +38,7 @@ class CopyFactory extends Object {
 	 * @var String
 	 */
 	private static $copy_fields_prefix = "Copy";
+
 	/**
 	 * the field where we save the ID of the completed copy
 	 * action should be the same of the field where we saved the original
@@ -129,7 +130,7 @@ class CopyFactory extends Object {
 			self::$singleton_holder[$obj->ClassName]->recordSession = true;
 		}
 		else {
-			self::$singleton_holder[$obj->ClassName]->recordSession = Config::inst()->get("CopyFactory", "for_real") ? false : true;
+			self::$singleton_holder[$obj->ClassName]->recordSession = self::$singleton_holder[$obj->ClassName]->isForReal;
 		}
 		return self::$singleton_holder[$obj->ClassName];
 	}
@@ -372,10 +373,15 @@ class CopyFactory extends Object {
 		$copyField = $newObject->CopyFromFieldName($withID = true);
 		$copyFieldCompleted = $newObject->CopiedFromFieldName($withID = true);
 		//important - reset, so that it does not get into a loop.
-		if($this->recordSession) {self::add_to_session("$copySessionRecording setting '$copyField' to zero setting '$copyFieldCompleted' to '".$copyFrom->ID."'",$copyFrom, $newObject);}
+		if($this->recordSession) {self::add_to_session("
+			$copySessionRecording
+			setting '$copyField' to zero
+			setting '$copyFieldCompleted' to '".$copyFrom->ID."'",
+			$copyFrom, $newObject);
+		}
 		if($this->isForReal) {
+			$newObject->$copyFieldCompleted = $copyFrom->ID;
 			if($newObject->exists()) {
-				$newObject->$copyFieldCompleted = $copyFrom->ID;
 				$newObject->$copyField = 0;
 			}
 			$newObject->write();
@@ -513,7 +519,7 @@ class CopyFactory extends Object {
 					====================================
 					ATTACH TO MORE RELEVANT HAS-ONE
 					FIELD $hasOneMethod
-					CONSTRAINT: ".$dataListToChooseFrom->sql()."
+					OBJECTS TO CHOOSE FROM: ".$dataListToChooseFrom->count()."
 					====================================
 				",
 				$copyFrom,
@@ -537,7 +543,7 @@ class CopyFactory extends Object {
 					if($count > 1) {
 						self::add_to_session("ERROR: found too many Matching records.", $copyFrom, $newObject);
 					}
-					elseif($count = 0) {
+					elseif($count == 0) {
 						self::add_to_session("ERROR: Could not find any Matching records.", $copyFrom, $newObject);
 					}
 					else {
@@ -551,7 +557,7 @@ class CopyFactory extends Object {
 			}
 		}
 		else {
-			self::add_to_session("copyFrom object does not have a value for: $fieldNameWithID", $copyFrom, $newObject);
+			if($this->recordSession) {self::add_to_session("copyFrom object does not have a value for: $fieldNameWithID", $copyFrom, $newObject);}
 		}
 		if($this->recordSession) {self::add_to_session("*** END OF attachToMoreRelevantHasOne ***", $copyFrom, $newObject);}
 		return $this;
@@ -723,7 +729,7 @@ class CopyFactory extends Object {
 				====================================
 				ATTACH TO MORE RELEVANT MANY-MANY
 				MANY-MANY METHOD: $manyManyMethod
-				CONSTRAINT: ".$dataListToChooseFrom->sql()."
+				OBJECTS TO CHOOSE FROM: ".$dataListToChooseFrom->count()."
 				EXTRA-FIELDS: '".implode(", ", $extraFields)."'
 				====================================
 				",
@@ -742,8 +748,8 @@ class CopyFactory extends Object {
 					->Sort("Created DESC");
 				$count = $myDataListToChooseFrom->count();
 				if($count == 1 && $newAttachment = $myDataListToChooseFrom->First()) {
-					if($this->recordSession) {self::add_to_session("Found Matching record.", $copyFrom, $newObject);}
-					if(count($extraFields)) {
+					if($this->recordSession) {self::add_to_session("Found Matching record using ".$manyManyRelation->CopiedFromFieldName($withID = true)." with ID: ".$manyManyRelation->ID, $copyFrom, $newObject);}
+					if($extraFields && count($extraFields)) {
 						unset($newExtraFieldsArray);
 						$newExtraFieldsArray = array();
 						foreach($extraFields as $extraField) {
@@ -761,14 +767,15 @@ class CopyFactory extends Object {
 				}
 				else {
 					if($this->recordSession) {
+						$useStatement =  ", using '".$manyManyRelation->CopiedFromFieldName($withID = true)."' with ID: '".$manyManyRelation->ID."'.";
 						if($count > 1) {
-							self::add_to_session("ERROR: found too many Matching records.", $copyFrom, $newObject);
+							self::add_to_session("ERROR: found too many Matching records".$useStatement, $copyFrom, $newObject);
 						}
-						elseif($count = 0) {
-							self::add_to_session("ERROR: Could not find any Matching records.", $copyFrom, $newObject);
+						elseif($count == 0) {
+							self::add_to_session("ERROR: Could not find any Matching records".$useStatement, $copyFrom, $newObject);
 						}
 						else {
-							self::add_to_session("ERROR: There was an error retrieving the matching record.", $copyFrom, $newObject);
+							self::add_to_session("ERROR: There was an error retrieving the matching record".$useStatement, $copyFrom, $newObject);
 						}
 					}
 					if($this->isForReal) {
@@ -778,7 +785,7 @@ class CopyFactory extends Object {
 			}
 		}
 		else {
-			self::add_to_session("copyFrom object does not have a value for", $copyFrom, $newObject);
+			if($this->recordSession) {self::add_to_session("copyFrom object does not have a value for", $copyFrom, $newObject);}
 		}
 		if($this->recordSession) {self::add_to_session("*** END OF attachToMoreRelevantManyMany ***", $copyFrom, $newObject);}
 		return $this;
