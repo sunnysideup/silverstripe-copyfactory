@@ -3,7 +3,7 @@
 	"type": "silverstripe-module",
 	"description": "Copy database records including their has-one, has-many and many-many records. Great for duplicating parts of complex database records.",
 	"homepage": "https://github.com/sunnysideup/silverstripe-copyfactory",
-	"keywords": ["copy", "paste", "database", "dataobject", "copying records", "duplicate records", "duplicate", "copy relations"],
+	"keywords": ["silverstripe", "copy", "paste", "database", "dataobject", "copying records", "duplicate records", "duplicate", "copy relations"],
 	"license": "Sunny Side Up (BSD-3-Clause and CUSTOM)",
 	"authors":[
 		{

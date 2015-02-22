@@ -6,8 +6,5 @@ After: 'framework/*','cms/*'
 
 SiteConfig:
   extensions:
-    - CopyFactorySiteTreeExtension
+    - CopyFactorySiteConfigExtension
 
-LeftAndMain:
-  extensions:
-    - CopyFactorySiteTreeExtension_LeftAndMainExtension

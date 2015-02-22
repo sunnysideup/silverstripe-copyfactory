@@ -20,21 +20,22 @@ class CopyFactoryDataExtension extends DataExtension {
 	public function updateCMSFields(FieldList $fields) {
 
 		parent::updateCMSFields($fields);
-		$className = $this->owner->ClassName;
-		$uncompletedField = $this->owner->CopyFromFieldName();
-		$uncompletedFieldWithID = $uncompletedField."ID";
-		$completedField = $this->owner->CopiedFromFieldName();
-		$completedFieldWithID = $completedField."ID";
-		//remove by default
-		$fields->removeByName($uncompletedFieldWithID);
-		$fields->removeByName($completedFieldWithID);
-		$changeMessage =
-					"<p class=\"message good\">".
-						_t("CopyFactory.CHANGE_SETTINGS", "You can change the settings for copying in").
-						" <a href=\"/admin/settings/\">"._t("CopyFactory.SITE_CONFIG", "The Site Config (see Copy Tab)")."</a>. ".
-						_t("CopyFactory.TURN_OFF_WHEN_NOT_IN_USE", "It is recommended you turn off the copy facility when not in use, as it will slow down the CMS.")."
-					</p>";
+
 		if($this->owner->exists()) {
+			$className = $this->owner->ClassName;
+			$uncompletedField = $this->owner->CopyFromFieldName();
+			$uncompletedFieldWithID = $uncompletedField."ID";
+			$completedField = $this->owner->CopiedFromFieldName();
+			$completedFieldWithID = $completedField."ID";
+			//remove by default
+			$fields->removeByName($uncompletedFieldWithID);
+			$fields->removeByName($completedFieldWithID);
+			$changeMessage =
+				"<p class=\"message good\">".
+					_t("CopyFactory.CHANGE_SETTINGS", "You can change the settings for copying in").
+					" <a href=\"/admin/settings/\">"._t("CopyFactory.SITE_CONFIG", "The Site Config (see Copy Tab)")."</a>. ".
+					_t("CopyFactory.TURN_OFF_WHEN_NOT_IN_USE", "It is recommended you turn off the copy facility when not in use, as it will slow down the CMS.")."
+				</p>";
 			//reload goes here ... @todo
 			/*
 			if($this->owner->ID && Session::get("CopyFactoryReload") == $this->owner->ID) {
@@ -49,7 +50,7 @@ class CopyFactoryDataExtension extends DataExtension {
 						$copyQuestionIDField = new ReadonlyField(
 							$completedField."_EXPLANATION",
 							_t("CopyFactory.COPIED_FROM", "This record has been copied from: "),
-							$this->CopyFactoryTitleMaker($obj)
+							$this->owner->CopyFactoryTitleMaker($obj)
 						)
 					);
 				}
@@ -232,19 +233,22 @@ class CopyFactoryDataExtension extends DataExtension {
 
 	/**
 	 * provides a meaningful title for an object
+	 *
+	 * @param String $obj - the object you want the name for ...
+	 *
 	 * @return String ...
 	 */
-	public function CopyFactoryTitleMaker(){
+	public function CopyFactoryTitleMaker($obj){
 		$methodOrField = $this->CopyFactoryPreferredTitleField();
-		if($this->owner->hasMethod($methodOrField)) {
-			return $this->owner->$methodOrField();
+		if($obj->hasMethod($methodOrField)) {
+			return $obj->$methodOrField();
 		}
-		elseif($this->owner->hasMethod("get".$methodOrField)) {
+		elseif($obj->hasMethod("get".$methodOrField)) {
 			$methodName = "get".$methodOrField;
-			return $this->owner->$methodName();
+			return $obj->$methodName();
 		}
 		else {
-			return $this->owner->$methodOrField;
+			return $obj->$methodOrField;
 		}
 	}
 
