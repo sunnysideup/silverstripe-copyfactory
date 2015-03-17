@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<source xmlns="http://xml.phpdox.net/src">
+  <dir name="/var/www/_modules/copyfactory/trunk">
+    <file name="_config.php" size="8" time="2015-03-14T10:23:17+13:00" unixtime="1426281797" sha1="5f4fef58a038d70820f210a4131e8e50687b8dc4" xml="tokens/_config.php.xml"/>
+    <dir name="code">
+      <dir name="model">
+        <file name="CopyFactoryLog.php" size="3665" time="2015-03-14T10:23:17+13:00" unixtime="1426281797" sha1="a98fd4e55fbda7b458bd11f9380bcdf7147c0c4c" xml="tokens/code/model/CopyFactoryLog.php.xml"/>
+        <file name="CopyFactorySiteConfigExtension.php" size="875" time="2015-03-14T10:23:17+13:00" unixtime="1426281797" sha1="9dd0231fea5b517956ec9d24852f7af956cecfbd" xml="tokens/code/model/CopyFactorySiteConfigExtension.php.xml"/>
+        <file name="CopyFactoryDataExtension.php" size="10080" time="2015-03-14T10:23:17+13:00" unixtime="1426281797" sha1="0074c3bb82c8392df5a93b99faa5e064192e30b1" xml="tokens/code/model/CopyFactoryDataExtension.php.xml"/>
+      </dir>
+      <dir name="api">
+        <file name="CopyFactory.php" size="27353" time="2015-03-14T10:23:17+13:00" unixtime="1426281797" sha1="39c7154a5019e1f27bcbc12332e509012b65499c" xml="tokens/code/api/CopyFactory.php.xml"/>
+      </dir>
+    </dir>
+  </dir>
+</source>
