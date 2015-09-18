@@ -527,33 +527,42 @@ class CopyFactory extends Object {
 			);
 		}
 		if($copyFrom->$fieldNameWithID) {
-			$dataListToChooseFrom = $dataListToChooseFrom
-				->filter(array($copyFrom->CopiedFromFieldName($withID = true) => $copyFrom->$fieldNameWithID))
-				->Sort("Created DESC");
-			$count = $dataListToChooseFrom->count();
-			if($count == 1 && $newAttachment = $dataListToChooseFrom->First()) {
-				if($this->recordSession) {self::add_to_session("Found Matching record.", $copyFrom, $newObject);}
-				if($this->isForReal) {
-					$newObject->$fieldNameWithID = $newAttachment->ID;
-					$newObject->write();
+			//find out field to choose from
+			$firstObject = $dataListToChooseFrom->first();
+			if($firstObject) {
+				$dataListToChooseFrom = $dataListToChooseFrom
+					->filter(array($firstObject->CopiedFromFieldName($withID = true) => $copyFrom->$fieldNameWithID))
+					->Sort("Created DESC");
+				$count = $dataListToChooseFrom->count();
+				if($count == 1 && $newAttachment = $dataListToChooseFrom->First()) {
+					if($this->recordSession) {self::add_to_session("Found Matching record.", $copyFrom, $newObject);}
+					if($this->isForReal) {
+						$newObject->$fieldNameWithID = $newAttachment->ID;
+						$newObject->write();
+					}
+				}
+				else {
+					if($this->recordSession) {
+						if($count > 1) {
+							self::add_to_session("ERROR: found too many Matching records.", $copyFrom, $newObject);
+						}
+						elseif($count == 0) {
+							self::add_to_session("ERROR: Could not find any Matching records.", $copyFrom, $newObject);
+						}
+						else {
+							self::add_to_session("ERROR: There was an error retrieving the matching record.", $copyFrom, $newObject);
+						}
+					}
+					if($this->isForReal) {
+						$newObject->$fieldNameWithID = 0;
+						$newObject->write();
+					}
 				}
 			}
 			else {
-				if($this->recordSession) {
-					if($count > 1) {
-						self::add_to_session("ERROR: found too many Matching records.", $copyFrom, $newObject);
-					}
-					elseif($count == 0) {
-						self::add_to_session("ERROR: Could not find any Matching records.", $copyFrom, $newObject);
-					}
-					else {
-						self::add_to_session("ERROR: There was an error retrieving the matching record.", $copyFrom, $newObject);
-					}
-				}
-				if($this->isForReal) {
-					$newObject->$fieldNameWithID = 0;
-					$newObject->write();
-				}
+				self::add_to_session("ERROR: Could not find any Matching records from base DataList.", $copyFrom, $newObject);
+				$newObject->$fieldNameWithID = 0;
+				$newObject->write();
 			}
 		}
 		else {
