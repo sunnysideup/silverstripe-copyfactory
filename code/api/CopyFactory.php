@@ -519,7 +519,7 @@ class CopyFactory extends Object {
 					====================================
 					ATTACH TO MORE RELEVANT HAS-ONE
 					FIELD $hasOneMethod
-					OBJECTS TO CHOOSE FROM: ".$dataListToChooseFrom->count()."
+					OBJECTS TO CHOOSE FROM: ".$dataListToChooseFrom->sql()."
 					====================================
 				",
 				$copyFrom,

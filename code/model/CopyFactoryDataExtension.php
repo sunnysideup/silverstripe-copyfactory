@@ -184,7 +184,7 @@ class CopyFactoryDataExtension extends DataExtension {
 	 */
 	public function CopyFromFieldName($withID = false){
 		$str = Config::inst()->get("CopyFactory", "copy_fields_prefix").
-			$this->FindOriginalObjectClassName();
+			$this->findOriginalObjectClassName();
 		if($withID ) {
 			$str .= "ID";
 		}
@@ -199,7 +199,7 @@ class CopyFactoryDataExtension extends DataExtension {
 	 */
 	public function CopiedFromFieldName($withID = false){
 		$str = Config::inst()->get("CopyFactory", "copy_fields_prefix").
-			$this->FindOriginalObjectClassName().
+			$this->findOriginalObjectClassName().
 			Config::inst()->get("CopyFactory", "completed_field_appendix");
 		if($withID ) {
 			$str .= "ID";
@@ -214,10 +214,12 @@ class CopyFactoryDataExtension extends DataExtension {
 	private static $my_original_object = array();
 
 	/**
-	 * finds the obj
-	 * @return DataObject
+	 * finds the class name for the object
+	 * being copied in terms of the exact object being
+	 * extended by CopyFactoryDataExtension
+	 * @return string
 	 */
-	private function FindOriginalObjectClassName(){
+	private function findOriginalObjectClassName(){
 		$key = $this->owner->ClassName.$this->owner->ID;
 		if(!isset(self::$my_original_object[$key])) {
 			$obj = $this->owner;
