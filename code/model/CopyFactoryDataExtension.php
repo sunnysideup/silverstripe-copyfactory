@@ -20,16 +20,16 @@ class CopyFactoryDataExtension extends DataExtension {
 	public function updateCMSFields(FieldList $fields) {
 
 		parent::updateCMSFields($fields);
+		$className = $this->owner->ClassName;
+		$uncompletedField = $this->owner->CopyFromFieldName();
+		$uncompletedFieldWithID = $uncompletedField."ID";
+		$completedField = $this->owner->CopiedFromFieldName();
+		$completedFieldWithID = $completedField."ID";
+		//remove by default
+		$fields->removeByName($uncompletedFieldWithID);
+		$fields->removeByName($completedFieldWithID);
 
-		if($this->owner->exists()) {
-			$className = $this->owner->ClassName;
-			$uncompletedField = $this->owner->CopyFromFieldName();
-			$uncompletedFieldWithID = $uncompletedField."ID";
-			$completedField = $this->owner->CopiedFromFieldName();
-			$completedFieldWithID = $completedField."ID";
-			//remove by default
-			$fields->removeByName($uncompletedFieldWithID);
-			$fields->removeByName($completedFieldWithID);
+		if($this->owner->exists() && SiteConfig::current_site_config()->AllowCopyingOfRecords) {
 			$changeMessage =
 				"<p class=\"message good\">".
 					_t("CopyFactory.CHANGE_SETTINGS", "You can change the settings for copying in").
@@ -158,6 +158,9 @@ class CopyFactoryDataExtension extends DataExtension {
 					$fields->addFieldToTab("Root.Copy", $this->gridFieldMaker($name, $title, $source));
 				}
 			}
+		}
+		else {
+
 		}
 	}
 
