@@ -1,9 +1,10 @@
 <?php
 
 
-class CopyFactoryDataExtension extends DataExtension {
-
-    public static function get_extra_config($className, $extension, $args) {
+class CopyFactoryDataExtension extends DataExtension
+{
+    public static function get_extra_config($className, $extension, $args)
+    {
         //foreach($config as $name => $value) {
         //	Config::inst()->update($className, $name, $value);
         //}
@@ -17,8 +18,8 @@ class CopyFactoryDataExtension extends DataExtension {
         );
     }
 
-    public function updateCMSFields(FieldList $fields) {
-
+    public function updateCMSFields(FieldList $fields)
+    {
         parent::updateCMSFields($fields);
         $className = $this->owner->ClassName;
         $uncompletedField = $this->owner->CopyFromFieldName();
@@ -29,7 +30,7 @@ class CopyFactoryDataExtension extends DataExtension {
         $fields->removeByName($uncompletedFieldWithID);
         $fields->removeByName($completedFieldWithID);
 
-        if(
+        if (
             $this->owner->exists() &&
             SiteConfig::current_site_config()->AllowCopyingOfRecords &&
             Permission::check('ADMIN')
@@ -47,8 +48,8 @@ class CopyFactoryDataExtension extends DataExtension {
                 return Controller::curr()->redirectBack();
             }
             */
-            if($this->owner->$completedFieldWithID) {
-                if($obj = $this->owner->$completedField()) {
+            if ($this->owner->$completedFieldWithID) {
+                if ($obj = $this->owner->$completedField()) {
                     $fields->addFieldToTab(
                         "Root.Copy",
                         $copyQuestionIDField = new ReadonlyField(
@@ -58,15 +59,14 @@ class CopyFactoryDataExtension extends DataExtension {
                         )
                     );
                 }
-            }
-            elseif($situation = SiteConfig::current_site_config()->AllowCopyingOfRecords) {
-                if($situation == 1) {
+            } elseif ($situation = SiteConfig::current_site_config()->AllowCopyingOfRecords) {
+                if ($situation == 1) {
                     $message = _t(
                         'CopyFactory.DRY_RUN_ONLY',
                         "Dry run only --- any changes below will be tested once your press 'SAVE' but no actual changes will be made.  You will find a log of intended changes below for review."
                     );
                 }
-                if($situation == 2) {
+                if ($situation == 2) {
                     $message = _t(
                         'CopyFactory.THIS_IS_FOR_REAL',
                         "Any changes below will be actioned once you press 'SAVE' - please use with care."
@@ -83,11 +83,11 @@ class CopyFactoryDataExtension extends DataExtension {
                 $copyableObjects = $className::get()
                     ->exclude(array("ID" => intval($this->owner->ID) - 0))
                     ->filter(array("ClassName" => $this->owner->ClassName));
-                if($this->owner->hasMethod("additionalFiltersForCopyableObjects")) {
+                if ($this->owner->hasMethod("additionalFiltersForCopyableObjects")) {
                     $copyAbleObjects = $this->owner->additionalFiltersForCopyableObjects($copyableObjects);
                 }
                 //there are objects to copy from
-                if($copyableObjects->count() > 0) {
+                if ($copyableObjects->count() > 0) {
                     $fields->addFieldToTab(
                         "Root.Copy",
                         $copyField = new DropdownField(
@@ -102,8 +102,7 @@ class CopyFactoryDataExtension extends DataExtension {
                         )
                     );
                     $copyField->setEmptyString(_t("CopyFactory.SELECT_ONE", "--- Select One ---"));
-                }
-                else {
+                } else {
                     $fields->addFieldToTab(
                         "Root.Copy",
                         $copyField = new LiteralField(
@@ -117,8 +116,7 @@ class CopyFactoryDataExtension extends DataExtension {
                         )
                     );
                 }
-            }
-            else {
+            } else {
                 $fields->addFieldToTab(
                     "Root.Copy",
                     $copyField = new LiteralField(
@@ -133,12 +131,12 @@ class CopyFactoryDataExtension extends DataExtension {
                     )
                 );
             }
-            if(Config::inst()->get("CopyFactory", "debug")) {
+            if (Config::inst()->get("CopyFactory", "debug")) {
                 $source = CopyFactoryLog::get()
                     ->filter(array("CopyCausingClassName" => $this->owner->ClassName, "CopyCausingClassNameID" => $this->owner->ID))
                     ->exclude(array("CopyIntoClassName" => $this->owner->ClassName, "CopyIntoClassNameID" => $this->owner->ID))
                     ->exclude(array("CopyIntoClassName" => $this->owner->ClassName, "CopyFromClassNameID" => $this->owner->ID));
-                if($source->count()) {
+                if ($source->count()) {
                     $name = "COPY_CAUSING_GRIDFIELD";
                     $title = _t("CopyFactory.COPY_CAUSING_TITLE", "Copy actions originated from this record.");
                     $fields->addFieldToTab("Root.Copy", $this->gridFieldMaker($name, $title, $source));
@@ -147,7 +145,7 @@ class CopyFactoryDataExtension extends DataExtension {
                     ->filter(array("CopyIntoClassName" => $this->owner->ClassName, "CopyIntoClassNameID" => $this->owner->ID))
                     //->exclude(array("CopyCausingClassName" => $this->owner->ClassName, "CopyCausingClassNameID" => $this->owner->ID))
                     ->exclude(array("CopyIntoClassName" => $this->owner->ClassName, "CopyFromClassNameID" => $this->owner->ID));
-                if($source->count()) {
+                if ($source->count()) {
                     $name = "COPY_INTO_GRIDFIELD";
                     $title = _t("CopyFactory.COPY_INTO_TITLE", "Copy actioned into this record.");
                     $fields->addFieldToTab("Root.Copy", $this->gridFieldMaker($name, $title, $source));
@@ -156,15 +154,13 @@ class CopyFactoryDataExtension extends DataExtension {
                     ->filter(array("CopyIntoClassName" => $this->owner->ClassName, "CopyFromClassNameID" => $this->owner->ID))
                     ->exclude(array("CopyIntoClassName" => $this->owner->ClassName, "CopyIntoClassNameID" => $this->owner->ID))
                     ->exclude(array("CopyCausingClassName" => $this->owner->ClassName, "CopyCausingClassNameID" => $this->owner->ID));
-                if($source->count()) {
+                if ($source->count()) {
                     $name = "COPY_FROM_GRIDFIELD";
                     $title = _t("CopyFactory.COPY_FROM_TITLE", "Copy actions from this record into another record.");
                     $fields->addFieldToTab("Root.Copy", $this->gridFieldMaker($name, $title, $source));
                 }
             }
-        }
-        else {
-
+        } else {
         }
     }
 
@@ -175,7 +171,8 @@ class CopyFactoryDataExtension extends DataExtension {
      *
      * @return GridField
      */
-    private function gridFieldMaker($name, $title, $source) {
+    private function gridFieldMaker($name, $title, $source)
+    {
         return new GridField(
             $name,
             _t("CopyFactory.COPY_FACTORY_LOG", "Copy Log: ").$title,
@@ -189,10 +186,11 @@ class CopyFactoryDataExtension extends DataExtension {
      * note the future tense.
      * @return String
      */
-    public function CopyFromFieldName($withID = false){
+    public function CopyFromFieldName($withID = false)
+    {
         $str = Config::inst()->get("CopyFactory", "copy_fields_prefix").
             $this->findOriginalObjectClassName();
-        if($withID ) {
+        if ($withID) {
             $str .= "ID";
         }
         return $str;
@@ -204,11 +202,12 @@ class CopyFactoryDataExtension extends DataExtension {
      * (links to "parent" object)
      * @return String
      */
-    public function CopiedFromFieldName($withID = false){
+    public function CopiedFromFieldName($withID = false)
+    {
         $str = Config::inst()->get("CopyFactory", "copy_fields_prefix").
             $this->findOriginalObjectClassName().
             Config::inst()->get("CopyFactory", "completed_field_appendix");
-        if($withID ) {
+        if ($withID) {
             $str .= "ID";
         }
         return $str;
@@ -226,11 +225,12 @@ class CopyFactoryDataExtension extends DataExtension {
      * extended by CopyFactoryDataExtension
      * @return string
      */
-    private function findOriginalObjectClassName(){
+    private function findOriginalObjectClassName()
+    {
         $key = $this->owner->ClassName.$this->owner->ID;
-        if(!isset(self::$my_original_object[$key])) {
+        if (!isset(self::$my_original_object[$key])) {
             $obj = $this->owner;
-            while($obj->hasExtension("CopyFactoryDataExtension")) {
+            while ($obj->hasExtension("CopyFactoryDataExtension")) {
                 $finalObject = $obj;
                 $obj = Injector::inst()->get(get_parent_class($obj));
             }
@@ -247,16 +247,15 @@ class CopyFactoryDataExtension extends DataExtension {
      *
      * @return String ...
      */
-    public function CopyFactoryTitleMaker($obj){
+    public function CopyFactoryTitleMaker($obj)
+    {
         $methodOrField = $this->CopyFactoryPreferredTitleField();
-        if($obj->hasMethod($methodOrField)) {
+        if ($obj->hasMethod($methodOrField)) {
             return $obj->$methodOrField();
-        }
-        elseif($obj->hasMethod("get".$methodOrField)) {
+        } elseif ($obj->hasMethod("get".$methodOrField)) {
             $methodName = "get".$methodOrField;
             return $obj->$methodName();
-        }
-        else {
+        } else {
             return $obj->$methodOrField;
         }
     }
@@ -265,9 +264,10 @@ class CopyFactoryDataExtension extends DataExtension {
      *
      * @return String
      */
-    public function CopyFactoryPreferredTitleField(){
+    public function CopyFactoryPreferredTitleField()
+    {
         $titleMap = Config::inst()->get("CopyFactory", "title_map_for_display_of_record_name");
-        if(isset($titleMap[$this->owner->ClassName])) {
+        if (isset($titleMap[$this->owner->ClassName])) {
             return $titleMap[$this->owner->ClassName];
         }
         return "Title";
@@ -277,7 +277,8 @@ class CopyFactoryDataExtension extends DataExtension {
      *
      * @return String
      */
-    protected function getCopyFactorySessionName(){
+    protected function getCopyFactorySessionName()
+    {
         return
             Config::inst()->get("CopyFactory", "dry_run_for_session_base_name")
             ."_".
@@ -287,11 +288,12 @@ class CopyFactoryDataExtension extends DataExtension {
     /**
      * mark that we are doing a copy ...
      */
-    function onBeforeWrite(){
+    public function onBeforeWrite()
+    {
         parent::onBeforeWrite();
-        if(isset($this->owner->ID) && $this->owner->ID) {
+        if (isset($this->owner->ID) && $this->owner->ID) {
             $fieldNameWithID = $this->owner->CopyFromFieldName(true);
-            if(isset($_POST[$fieldNameWithID]) && $_POST[$fieldNameWithID]) {
+            if (isset($_POST[$fieldNameWithID]) && $_POST[$fieldNameWithID]) {
                 Session::set("CopyFactoryReload", $this->owner->ID);
             }
         }
@@ -300,17 +302,17 @@ class CopyFactoryDataExtension extends DataExtension {
     /**
      * we run the actual copying onAfterWrite
      */
-    function onAfterWrite(){
+    public function onAfterWrite()
+    {
         parent::onAfterWrite();
-        if(SiteConfig::current_site_config()->AllowCopyingOfRecords) {
+        if (SiteConfig::current_site_config()->AllowCopyingOfRecords) {
             $fieldName = $this->owner->CopyFromFieldName(false);
             $fieldNameWithID = $this->owner->CopyFromFieldName(true);
-            if($this->owner->$fieldNameWithID) {
-                if($copyFrom = $this->owner->$fieldName()) {
+            if ($this->owner->$fieldNameWithID) {
+                if ($copyFrom = $this->owner->$fieldName()) {
                     $factory = CopyFactory::create($this->owner);
                     $factory->copyObject($copyFrom, $this->owner);
-                }
-                else {
+                } else {
                     // a little cleanup: lets reset ...
                     $this->owner->$fieldNameWithID = 0;
                     $this->owner->write();
@@ -318,6 +320,4 @@ class CopyFactoryDataExtension extends DataExtension {
             }
         }
     }
-
-
 }
