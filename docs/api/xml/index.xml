@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<index xmlns="http://xml.phpdox.net/src" basedir="/var/www/_modules/copyfactory/trunk">
-  <namespace name="">
-    <class name="CopyFactoryLog" src="code/model/CopyFactoryLog.php" description="keeps track of any changes being made, fake or real" xml="classes/CopyFactoryLog.xml"/>
-    <class name="CopyFactorySiteConfigExtension" src="code/model/CopyFactorySiteConfigExtension.php" xml="classes/CopyFactorySiteConfigExtension.xml"/>
-    <class name="CopyFactoryDataExtension" src="code/model/CopyFactoryDataExtension.php" xml="classes/CopyFactoryDataExtension.xml"/>
-    <class name="CopyFactory" src="code/api/CopyFactory.php" xml="classes/CopyFactory.xml"/>
-  </namespace>
-</index>
