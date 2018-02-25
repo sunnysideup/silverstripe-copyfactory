@@ -385,11 +385,14 @@ class CopyFactory extends Object
         $copyFieldCompleted = $newObject->CopiedFromFieldName($withID = true);
         //important - reset, so that it does not get into a loop.
         if ($this->recordSession) {
-            self::add_to_session("
-			$copySessionRecording
-			setting '$copyField' to zero
-			setting '$copyFieldCompleted' to '".$copyFrom->ID."'",
-            $copyFrom, $newObject);
+            self::add_to_session(
+                "
+			    $copySessionRecording
+			    setting '$copyField' to zero
+			    setting '$copyFieldCompleted' to '".$copyFrom->ID."'",
+                $copyFrom,
+                $newObject
+            );
         }
         if ($this->isForReal) {
             $newObject->$copyFieldCompleted = $copyFrom->ID;
@@ -421,7 +424,8 @@ class CopyFactory extends Object
     public function copyOriginalHasOneItem($copyFromParent, $newObjectParent, $relationalFieldForChildWithoutID)
     {
         if ($this->recordSession) {
-            self::add_to_session("
+            self::add_to_session(
+                "
 					====================================
 					COPY ORIGINAL HAS-ONE RELATION: $relationalFieldForChildWithoutID
 					Children will link to original record (will not be copied)
@@ -508,7 +512,7 @@ class CopyFactory extends Object
                             $copyFromChildObject,
                             $newObjectChildObject
                         );
-                        //hack fix
+                    //hack fix
                     } else {
                         self::add_to_session("Saved with correct new parent field ($relationFieldForParentWithID) ID: ".$newObjectChildObject->$relationFieldForParentWithID, $copyFromChildObject, $newObjectChildObject);
                     }
@@ -531,7 +535,8 @@ class CopyFactory extends Object
     {
         $fieldNameWithID = $hasOneMethod."ID";
         if ($this->recordSession) {
-            self::add_to_session("
+            self::add_to_session(
+                "
 					====================================
 					ATTACH TO MORE RELEVANT HAS-ONE
 					FIELD $hasOneMethod
@@ -619,13 +624,16 @@ class CopyFactory extends Object
     public function copyHasManyRelation($copyFromParent, $newObjectParent, $relationalFieldForChildren, $relationFieldForParentWithoutID)
     {
         if ($this->recordSession) {
-            self::add_to_session("
+            self::add_to_session(
+                "
 				====================================
 				COPY HAS-MANY RELATION:
 				CHILDREN METHOD: '$relationalFieldForChildren' and
 				PARENT METHOD: '$relationFieldForParentWithoutID'
 				====================================
-				", $copyFromParent, $newObjectParent
+				",
+                $copyFromParent,
+                $newObjectParent
             );
         }
         foreach ($copyFromParent->$relationalFieldForChildren() as $copyFromChildObject) {
@@ -662,11 +670,13 @@ class CopyFactory extends Object
                     self::add_to_session("CREATED object", $copyFromChildObject, $newObjectChildObject);
                 }
                 if ($newObjectChildObject->$relationFieldForParentWithID != $newObjectParent->ID) {
-                    self::add_to_session("
+                    self::add_to_session(
+                        "
 						ERROR: broken link ...  '".$newObjectChildObject->$relationFieldForParentWithID."' is not equal to '".$newObjectParent->ID."'",
-                        $copyFromChildObject, $newObjectChildObject
+                        $copyFromChildObject,
+                        $newObjectChildObject
                     );
-                    //hack fix
+                //hack fix
                 } else {
                     self::add_to_session("Saved with correct new parent field ($relationFieldForParentWithID) ID: ".$newObjectChildObject->$relationFieldForParentWithID, $copyFromChildObject, $newObjectChildObject);
                 }
@@ -707,14 +717,16 @@ class CopyFactory extends Object
     public function copyOriginalManyManyItems($copyFrom, $newObject, $manyManyMethod, $extraFields = array())
     {
         if ($this->recordSession) {
-            self::add_to_session("
+            self::add_to_session(
+                "
 				====================================
 				COPY Original Many Many Items
 				MANY-MANY METHOD: '$manyManyMethod'
 				EXTRAFIELDS: '".implode(", ", $extraFields)."'
 				====================================
 				",
-                $copyFrom, $newObject
+                $copyFrom,
+                $newObject
             );
         }
         //remove current ones on NewObject
@@ -761,7 +773,8 @@ class CopyFactory extends Object
     public function attachToMoreRelevantManyMany($copyFrom, $newObject, $manyManyMethod, $dataListToChooseFrom, $extraFields = array())
     {
         if ($this->recordSession) {
-            self::add_to_session("
+            self::add_to_session(
+                "
 				====================================
 				ATTACH TO MORE RELEVANT MANY-MANY
 				MANY-MANY METHOD: $manyManyMethod
