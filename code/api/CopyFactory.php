@@ -104,22 +104,22 @@ class CopyFactory extends Object
             if (SiteConfig::current_site_config()->AllowCopyingOfRecords == 1) {
                 Config::inst()->update("CopyFactory", "for_real", false);
                 self::add_to_session("
-					===========================================================
-					Starting dry run: ".date("r", $startTime)."
-					===========================================================
-					===========================================================
-				");
+                    ===========================================================
+                    Starting dry run: ".date("r", $startTime)."
+                    ===========================================================
+                    ===========================================================
+                ");
             }
             // for real ...
             if (SiteConfig::current_site_config()->AllowCopyingOfRecords == 2) {
                 Config::inst()->update("CopyFactory", "for_real", true);
                 // we cant do too many writes ... in a live environment
                 self::add_to_session("
-					===========================================================
-					Starting real copy task: ".date("r", $startTime)."
-					===========================================================
-					===========================================================
-				");
+                    ===========================================================
+                    Starting real copy task: ".date("r", $startTime)."
+                    ===========================================================
+                    ===========================================================
+                ");
             }
         }
         if (!isset(self::$singleton_holder[$obj->ClassName])) {
@@ -350,16 +350,16 @@ class CopyFactory extends Object
         if ($this->recordSession) {
             self::add_to_session(
                 "
-					====================================
-					*** COPYING INTO
-					".($this->myClassName != $copyFrom->ClassName ? "ERROR: ClassName mismatch: ".$this->myClassName." != ".$copyFrom->ClassName : "")."
-					Values will ".($overwriteValues ? "" : "NOT")." be overridden.
-					DB Fields: ".implode(", ", array_keys($dbFields))."
-					HAS ONE Fields: ".implode(", ", array_keys($hasOneFields))."
-					IGNORE Fields: ".implode(", ", $this->ignoreFields)."
-					FINAL Fields: ".implode(", ", $fields)."
-					====================================
-				",
+                    ====================================
+                    *** COPYING INTO
+                    ".($this->myClassName != $copyFrom->ClassName ? "ERROR: ClassName mismatch: ".$this->myClassName." != ".$copyFrom->ClassName : "")."
+                    Values will ".($overwriteValues ? "" : "NOT")." be overridden.
+                    DB Fields: ".implode(", ", array_keys($dbFields))."
+                    HAS ONE Fields: ".implode(", ", array_keys($hasOneFields))."
+                    IGNORE Fields: ".implode(", ", $this->ignoreFields)."
+                    FINAL Fields: ".implode(", ", $fields)."
+                    ====================================
+                ",
                 $copyFrom,
                 $newObject
             );
@@ -387,9 +387,9 @@ class CopyFactory extends Object
         if ($this->recordSession) {
             self::add_to_session(
                 "
-			    $copySessionRecording
-			    setting '$copyField' to zero
-			    setting '$copyFieldCompleted' to '".$copyFrom->ID."'",
+                $copySessionRecording
+                setting '$copyField' to zero
+                setting '$copyFieldCompleted' to '".$copyFrom->ID."'",
                 $copyFrom,
                 $newObject
             );
@@ -426,11 +426,11 @@ class CopyFactory extends Object
         if ($this->recordSession) {
             self::add_to_session(
                 "
-					====================================
-					COPY ORIGINAL HAS-ONE RELATION: $relationalFieldForChildWithoutID
-					Children will link to original record (will not be copied)
-					====================================
-				",
+                    ====================================
+                    COPY ORIGINAL HAS-ONE RELATION: $relationalFieldForChildWithoutID
+                    Children will link to original record (will not be copied)
+                    ====================================
+                ",
                 $copyFromParent,
                 $newObjectParent
             );
@@ -461,10 +461,10 @@ class CopyFactory extends Object
     {
         if ($this->recordSession) {
             self::add_to_session("
-			====================================
-			COPY HAS-ONE RELATION: $relationalFieldForChildWithoutID
-			====================================
-			", $copyFromParent, $newObjectParent);
+            ====================================
+            COPY HAS-ONE RELATION: $relationalFieldForChildWithoutID
+            ====================================
+            ", $copyFromParent, $newObjectParent);
         }
         if ($copyFromChildObject = $copyFromParent->$relationalFieldForChildWithoutID()) {
             if ($copyFromChildObject->exists()) {
@@ -537,12 +537,12 @@ class CopyFactory extends Object
         if ($this->recordSession) {
             self::add_to_session(
                 "
-					====================================
-					ATTACH TO MORE RELEVANT HAS-ONE
-					FIELD $hasOneMethod
-					OBJECTS TO CHOOSE FROM: ".$dataListToChooseFrom->sql()."
-					====================================
-				",
+                    ====================================
+                    ATTACH TO MORE RELEVANT HAS-ONE
+                    FIELD $hasOneMethod
+                    OBJECTS TO CHOOSE FROM: ".$dataListToChooseFrom->sql()."
+                    ====================================
+                ",
                 $copyFrom,
                 $newObject
             );
@@ -626,12 +626,12 @@ class CopyFactory extends Object
         if ($this->recordSession) {
             self::add_to_session(
                 "
-				====================================
-				COPY HAS-MANY RELATION:
-				CHILDREN METHOD: '$relationalFieldForChildren' and
-				PARENT METHOD: '$relationFieldForParentWithoutID'
-				====================================
-				",
+                ====================================
+                COPY HAS-MANY RELATION:
+                CHILDREN METHOD: '$relationalFieldForChildren' and
+                PARENT METHOD: '$relationFieldForParentWithoutID'
+                ====================================
+                ",
                 $copyFromParent,
                 $newObjectParent
             );
@@ -644,7 +644,7 @@ class CopyFactory extends Object
                 self::add_to_session("Creating a new object '$className'; adding parent field ($relationFieldForParentWithID) ID: ".$newObjectParent->ID, $copyFromParent, $newObjectParent);
             }
             //create object and set parent ...
-            $newObjectChildObject = new $className();
+            $newObjectChildObject = $className::create();
             if ($this->isForReal) {
                 $newObjectChildObject->$relationFieldForParentWithID = $newObjectParent->ID;
 
@@ -672,7 +672,7 @@ class CopyFactory extends Object
                 if ($newObjectChildObject->$relationFieldForParentWithID != $newObjectParent->ID) {
                     self::add_to_session(
                         "
-						ERROR: broken link ...  '".$newObjectChildObject->$relationFieldForParentWithID."' is not equal to '".$newObjectParent->ID."'",
+                        ERROR: broken link ...  '".$newObjectChildObject->$relationFieldForParentWithID."' is not equal to '".$newObjectParent->ID."'",
                         $copyFromChildObject,
                         $newObjectChildObject
                     );
@@ -719,12 +719,12 @@ class CopyFactory extends Object
         if ($this->recordSession) {
             self::add_to_session(
                 "
-				====================================
-				COPY Original Many Many Items
-				MANY-MANY METHOD: '$manyManyMethod'
-				EXTRAFIELDS: '".implode(", ", $extraFields)."'
-				====================================
-				",
+                ====================================
+                COPY Original Many Many Items
+                MANY-MANY METHOD: '$manyManyMethod'
+                EXTRAFIELDS: '".implode(", ", $extraFields)."'
+                ====================================
+                ",
                 $copyFrom,
                 $newObject
             );
@@ -775,13 +775,13 @@ class CopyFactory extends Object
         if ($this->recordSession) {
             self::add_to_session(
                 "
-				====================================
-				ATTACH TO MORE RELEVANT MANY-MANY
-				MANY-MANY METHOD: $manyManyMethod
-				OBJECTS TO CHOOSE FROM: ".$dataListToChooseFrom->count()."
-				EXTRA-FIELDS: '".implode(", ", $extraFields)."'
-				====================================
-				",
+                ====================================
+                ATTACH TO MORE RELEVANT MANY-MANY
+                MANY-MANY METHOD: $manyManyMethod
+                OBJECTS TO CHOOSE FROM: ".$dataListToChooseFrom->count()."
+                EXTRA-FIELDS: '".implode(", ", $extraFields)."'
+                ====================================
+                ",
                 $copyFrom,
                 $newObject
             );
