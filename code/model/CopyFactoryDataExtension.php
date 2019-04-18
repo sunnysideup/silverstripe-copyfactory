@@ -52,7 +52,7 @@ class CopyFactoryDataExtension extends DataExtension
                 if ($obj = $this->owner->$completedField()) {
                     $fields->addFieldToTab(
                         "Root.Copy",
-                        $copyQuestionIDField = new ReadonlyField(
+                        new ReadonlyField(
                             $completedField."_EXPLANATION",
                             _t("CopyFactory.COPIED_FROM", "This record has been copied from: "),
                             $this->owner->CopyFactoryTitleMaker($obj)
@@ -317,6 +317,19 @@ class CopyFactoryDataExtension extends DataExtension
                     $this->owner->$fieldNameWithID = 0;
                     $this->owner->write();
                 }
+            }
+        }
+    }
+
+    public function CopiedFromObject()
+    {
+        if (
+            $this->owner->exists()
+        ) {
+            $completedField = $this->owner->CopiedFromFieldName();
+            $completedFieldWithID = $completedField."ID";
+            if ($this->owner->$completedFieldWithID) {
+                return $this->owner->$completedField();
             }
         }
     }
